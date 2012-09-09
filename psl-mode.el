@@ -81,6 +81,7 @@
   (set-syntax-table psl-mode-syntax-table)
   (set (make-local-variable 'font-lock-defaults) '(psl-font-lock-keywords))
   (set (make-local-variable 'indent-line-function) 'psl-indent-line)
+  (set (make-local-variable 'comment-start) "#")
   (setq major-mode 'psl-mode)
   (setq mode-name "ParselTongue")
   (run-hooks 'psl-mode-hook))
