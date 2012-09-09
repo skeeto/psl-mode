@@ -4,18 +4,15 @@
 (defvar psl-mode-map (make-sparse-keymap)
   "Keymap for ParselTongue mode.")
 
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.psl\\'" . psl-mode))
-
-(defvar psl-keywords '("deffun" "defvar" "in"))
-(defvar psl-functions '("<" ">" "+" "-" "==" "print"))
-(defvar psl-builtin '("for" "while" "lambda"))
+(defvar psl--keywords '("deffun" "defvar" "in"))
+(defvar psl--functions '("<" ">" "+" "-" "==" "print"))
+(defvar psl--builtin '("for" "while" "lambda"))
 
 (defconst psl-font-lock-keywords
   (list
-   `(,(regexp-opt psl-keywords 'words) . font-lock-keyword-face)
-   `(,(regexp-opt psl-functions 'words) . font-lock-function-name-face)
-   `(,(regexp-opt psl-builtin 'words) . font-lock-builtin-face)
+   `(,(regexp-opt psl--keywords 'words) . font-lock-keyword-face)
+   `(,(regexp-opt psl--functions 'words) . font-lock-function-name-face)
+   `(,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
    '("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for ParselTongue mode.")
 
@@ -54,7 +51,9 @@
              ((bobp) (setq cur-indent (current-indentation)))))))
       (indent-line-to (max 0 (or cur-indent 0))))))
 
+;;;###autoload
 (defun psl-mode ()
+  "Mode for editing ParselTongue code."
   (interactive)
   (kill-all-local-variables)
   (use-local-map psl-mode-map)
@@ -64,5 +63,8 @@
   (setq major-mode 'psl-mode)
   (setq mode-name "ParselTongue")
   (run-hooks 'psl-mode-hook))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.psl\\'" . psl-mode))
 
 (provide 'psl-mode)
