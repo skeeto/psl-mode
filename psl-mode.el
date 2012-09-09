@@ -49,7 +49,7 @@
               (setq cur-indent (current-indentation)))
              ((looking-at "\\(^.*}[^{]*$\\)")
               (setq cur-indent (- (current-indentation) psl-indent-width)))
-             ((looking-at "\\(^.*\\(?:{\\|deffun\\)[^}]*$\\)")
+             ((looking-at "\\(^.*\\(?:{\\|deffun\\|defvar\\)[^}]*$\\)")
               (setq cur-indent (+ (current-indentation) psl-indent-width)))
              ((bobp) (setq cur-indent (current-indentation)))))))
       (indent-line-to (max 0 (or cur-indent 0))))))
