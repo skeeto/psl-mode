@@ -37,7 +37,7 @@
   (if (bobp)
       (indent-line-to 0)
     (let (cur-indent)
-      (if (looking-at "^[ \t]*}")
+      (if (looking-at "^[ \t]*\\(?:}\\|in\\)")
           (save-excursion
             (forward-line -1)
             (setq cur-indent (- (current-indentation) psl-indent-width)))
@@ -49,7 +49,7 @@
               (setq cur-indent (current-indentation)))
              ((looking-at "\\(^.*}[^{]*$\\)")
               (setq cur-indent (- (current-indentation) psl-indent-width)))
-             ((looking-at "\\(^.*{[^}]*$\\)")
+             ((looking-at "\\(^.*\\(?:{\\|deffun\\)[^}]*$\\)")
               (setq cur-indent (+ (current-indentation) psl-indent-width)))
              ((bobp) (setq cur-indent (current-indentation)))))))
       (indent-line-to (max 0 (or cur-indent 0))))))
