@@ -1,3 +1,24 @@
+;;; psl-mode.el -- major mode for ParselTongue
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Author: Christopher Wellons <mosquitopsu@gmail.com>
+;; URL: https://github.com/skeeto/psl-mode
+;; Version: 0.1
+
+;;; Commentary:
+
+;; Automatic indentation is a little flaky. It assumes the coding
+;; style is going to be fairly reasonable. Currently, multiline if
+;; statements won't indent properly without curly brackets.
+
+;; The indentation size can be set with `psl-indent-width'.
+
+;; The ParselTongue specification:
+;;  http://www.cs.brown.edu/courses/cs173/2012/Assignments/ParselTest/spec.html
+
+;;; Code:
+
 (defvar psl-mode-hook nil
   "Hook for ParselTongue mode.")
 
@@ -68,3 +89,5 @@
 (add-to-list 'auto-mode-alist '("\\.psl\\'" . psl-mode))
 
 (provide 'psl-mode)
+
+;;; psl-mode.el ends here
