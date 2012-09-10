@@ -92,7 +92,7 @@ program filename as its first argument.")
 
 ;;;###autoload
 (defun psl-mode ()
-  "Mode for editing ParselTongue code."
+  "Mode for editing ParselTongue code. \\{psl-mode-map}"
   (interactive)
   (kill-all-local-variables)
   (use-local-map psl-mode-map)
