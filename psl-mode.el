@@ -65,9 +65,9 @@
             (cond
              ((looking-at "^[ \t]*}")
               (setq cur-indent (current-indentation)))
-             ((looking-at "\\(^.*}[^{]*$\\)")
+             ((looking-at "\\(^[^#]*}[^{]*$\\)")
               (setq cur-indent (- (current-indentation) psl-indent-width)))
-             ((looking-at "\\(^.*\\(?:{\\|deffun\\|defvar\\)[^}]*$\\)")
+             ((looking-at "\\(^[^#]*\\(?:{\\|deffun\\|defvar\\)[^}]*$\\)")
               (setq cur-indent (+ (current-indentation) psl-indent-width)))
              ((bobp) (setq cur-indent (current-indentation)))))))
       (indent-line-to (max 0 (or cur-indent 0))))))
