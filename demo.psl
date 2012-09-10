@@ -1,0 +1,12 @@
+deffun evenp(x)
+    if ==(x, 0) then true
+    else if ==(x, 1) then false
+    else evenp(-(x, 2))
+in defvar x = 14 in {
+    while (evenp(x)) { x--; };   # Make sure x odd
+    print("This is an odd number: ");
+    print(x);
+    ## Finally, demonstrate objects:
+    ({pos: 2, trans: lambda(self, diff) { +(self.pos, diff) }})@trans(4);
+    ""; # No output
+}
