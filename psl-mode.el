@@ -35,14 +35,17 @@
   "The path to an interpreter which accepts a ParselTongue
 program filename as its first argument.")
 
-(defvar psl--keywords '("deffun" "defvar" "in"))
-(defvar psl--functions '("<" ">" "+" "-" "==" "print"))
-(defvar psl--builtin '("for" "while" "lambda"))
+(defvar psl--keywords
+  '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda"))
+(defvar psl--builtin
+  '("<" ">" "+" "-" "==" "print"))
+(defvar psl--constants
+  '("true" "false"))
 
 (defconst psl-font-lock-keywords
   (list
    `(,(regexp-opt psl--keywords 'words) . font-lock-keyword-face)
-   `(,(regexp-opt psl--functions 'words) . font-lock-function-name-face)
+   `(,(regexp-opt psl--constants 'words) . font-lock-constant-face)
    `(,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
    '("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for ParselTongue mode.")
@@ -53,6 +56,11 @@ program filename as its first argument.")
 (defvar psl-mode-syntax-table
   (let ((st (make-syntax-table)))
     (modify-syntax-entry ?_ "w" st)
+    (modify-syntax-entry ?+ "w" st)
+    (modify-syntax-entry ?- "w" st)
+    (modify-syntax-entry ?< "w" st)
+    (modify-syntax-entry ?> "w" st)
+    (modify-syntax-entry ?= "w" st)
     (modify-syntax-entry ?# "< b" st)
     (modify-syntax-entry ?\n "> b" st)
     st)
