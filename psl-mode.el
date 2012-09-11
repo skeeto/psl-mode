@@ -22,6 +22,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl))
+
 (defvar psl-mode-hook nil
   "Hook for ParselTongue mode.")
 
