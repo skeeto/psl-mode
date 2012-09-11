@@ -3,7 +3,9 @@
 (with-current-buffer (get-buffer "*example*")
   (goto-char (point-min))
   ;(mpd-parse psl-tokens)
-  (mpd-match 'expr psl-tokens))
+  (mpd-match 'expr psl-tokens psl-token-funcs))
+
+;;; ParselTongue grammar
 
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda funcapp id])
@@ -25,10 +27,18 @@
     ;; Objects
     (pairs     pair [("," pairs) ""])
     (pair      id ":" expr)
-    (object    "{" ["" pairs] "}")))
+    (object    "{" ["" pairs] "}"))
+  "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
-  `((number . ,(lambda (expr) (string-to-number (nth 1 expr))))))
+  `((number . ,(lambda (token num) (string-to-number (car num)))))
+  "Syntax tree manipulation functions.")
+
+;;; Parser functions
+
+(defun mpd-get-token-func (token funcs)
+  "Get the manipulation function for the given token."
+  (or (cdr (assoc token funcs)) #'cons))
 
 (defun mpd-parse (tokens &optional funcs)
   "Return the next item in the current buffer."
@@ -36,12 +46,8 @@
     (let ((result (mpd-match (car token) tokens funcs)))
       (if result (return result)))))
 
-(defun mpd--cons-if (head tail)
-  "Cons only if tail is not nil."
-  (if (mpd-match-p tail)
-      (cons head tail)))
-
 (defun mpd-match-list (list tokens funcs)
+  "Match all patterns in a list."
   (let ((result (mpd-match (car list) tokens funcs)))
     (when result
       (if (null (cdr list))
@@ -51,21 +57,25 @@
             (cons result rest)))))))
 
 (defun mpd-match-regex (regex tokens funcs)
+  "Match a regex."
   (when (looking-at regex)
     (prog1 (buffer-substring-no-properties (point) (match-end 0))
       (goto-char (match-end 0)))))
 
 (defun mpd-match-token (token tokens funcs)
+  "Match a token by name (symbol)."
   (let* ((pattern (cdr (assoc token tokens)))
          (match (mpd-match pattern tokens funcs)))
-    (when match (cons token match))))
+    (when match (funcall (mpd-get-token-func token funcs) token match))))
 
 (defun mpd-match-or (vec tokens funcs)
+  "Match at least one pattern in the vector."
   (dolist (option (coerce vec 'list))
     (let ((match (mpd-match option tokens funcs)))
       (when match (return match)))))
 
 (defun mpd-match (pattern tokens &optional funcs)
+  "Match the given pattern object of any type (toplevel)."
   (search-forward-regexp "[[:space:]]*")
   (let ((start (point))
         (result (etypecase pattern
