@@ -2,80 +2,77 @@
 
 (with-current-buffer (get-buffer "*example*")
   (goto-char (point-min))
-  (mpd-parse psl-tokens))
+  ;(mpd-parse psl-tokens)
+  (mpd-match 'expr psl-tokens))
 
 (defvar psl-tokens
-  '((expr      (block defvar deffun number object lambda id))
+  '((expr      [block defvar deffun number object lambda funcapp id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
     (number    "[0-9]+")
     (block     "{" exprs "}")
-    (exprs     expr ((";" exprs) ""))
+    (exprs     expr [(";" exprs) ""])
 
     ;; Identifiers
     (id        "[a-zA-Z]+")
-    (ids       id (("," id) ""))
+    (ids       id [("," id) ""])
     (params    "(" ids ")")
 
     ;; Function application
-    (funcapp   "(" exprs ")")
+    (funcapp   id "(" exprs ")")
 
     ;; Objects
-    (pairs     pair (("," pairs) ""))
+    (pairs     pair [("," pairs) ""])
     (pair      id ":" expr)
-    (object    "{" ("" pairs) "}")))
+    (object    "{" ["" pairs] "}")))
 
-(defun mpd-parse (tokens)
+(defvar psl-token-funcs
+  `((number . ,(lambda (expr) (string-to-number (nth 1 expr))))))
+
+(defun mpd-parse (tokens &optional funcs)
   "Return the next item in the current buffer."
-  (let ((start (point)))
-    (dolist (token tokens)
-      (message (format "Trying %s" (car token)))
-      (let ((result (mpd-match tokens (cdr token))))
-        (if (eq result 'no-match)
-            (goto-char start)
-          (return (cons (car token) result)))))))
-
-(defun mpd-skip-space ()
-  "Skip over whitespace."
-  (search-forward-regexp "[[:space:]]*"))
+  (dolist (token tokens)
+    (let ((result (mpd-match (car token) tokens funcs)))
+      (if result (return result)))))
 
 (defun mpd--cons-if (head tail)
-  "Cons only if tail is no `no-match'."
-  (if (not (eq tail 'no-match))
-      (cons head tail)
-    'no-match))
+  "Cons only if tail is not nil."
+  (if (mpd-match-p tail)
+      (cons head tail)))
 
-(defun mpd-match (tokens expr)
-  "Return the matching tokens if expr matches, otherwise return
-the symbol `no-match'."
-  (if (null expr)
-      ()
-    (mpd-skip-space)
-    (let ((this (car expr))
-          (rest (cdr expr)))
-      (etypecase this
-        (string
-         (if (looking-at this)
-           (let* ((end (match-end 0))
-                  (start (point))
-                  (capture (buffer-substring (point) end)))
-             (goto-char end)
-             (let ((result (mpd-match tokens rest)))
-               (if (not (eq result 'no-match))
-                   (cons capture result)
-                 (goto-char start)
-                 'no-match)))
-           'no-match))
-        (symbol
-         (let ((result (mpd-match tokens (cdr (assoc this tokens)))))
-           (if (not (eq result 'no-match))
-               (mpd--cons-if (cons this result) (mpd-match tokens rest))
-             'no-match)))
-        (list
-         (dolist (item this 'no-match)
-           (let ((res1 (mpd-match tokens (if (listp item) item (list item)))))
-             (if (not (eq res1 'no-match))
-                 (let ((res2 (mpd-match tokens rest)))
-                   (if (not (eq res2 'no-match))
-                       (return (append res1 res2))))))))))))
+(defun mpd-match-list (list tokens funcs)
+  (let ((result (mpd-match (car list) tokens funcs)))
+    (when result
+      (if (null (cdr list))
+          (list result)
+        (let ((rest (mpd-match-list (cdr list) tokens funcs)))
+          (when rest
+            (cons result rest)))))))
+
+(defun mpd-match-regex (regex tokens funcs)
+  (when (looking-at regex)
+    (prog1 (buffer-substring-no-properties (point) (match-end 0))
+      (goto-char (match-end 0)))))
+
+(defun mpd-match-token (token tokens funcs)
+  (let* ((pattern (cdr (assoc token tokens)))
+         (match (mpd-match pattern tokens funcs)))
+    (when match (cons token match))))
+
+(defun mpd-match-or (vec tokens funcs)
+  (dolist (option (coerce vec 'list))
+    (let ((match (mpd-match option tokens funcs)))
+      (when match (return match)))))
+
+(defun mpd-match (pattern tokens &optional funcs)
+  (search-forward-regexp "[[:space:]]*")
+  (let ((start (point))
+        (result (etypecase pattern
+                  (string (mpd-match-regex pattern tokens funcs))
+                  (list   (mpd-match-list  pattern tokens funcs))
+                  (symbol (mpd-match-token pattern tokens funcs))
+                  (vector (mpd-match-or    pattern tokens funcs)))))
+    (unless result
+      (goto-char start))
+    result))
