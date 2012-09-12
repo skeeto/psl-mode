@@ -55,11 +55,10 @@ argument."
   '("true" "false"))
 
 (defconst psl-font-lock-keywords
-  (list
-   `(,(regexp-opt psl--keywords 'words) . font-lock-keyword-face)
-   `(,(regexp-opt psl--constants 'words) . font-lock-constant-face)
-   `(,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
-   '("\\('\\w*'\\)" . font-lock-variable-name-face))
+  `((,(regexp-opt psl--keywords 'words) . font-lock-keyword-face)
+    (,(regexp-opt psl--constants 'words) . font-lock-constant-face)
+    (,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
+    ("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for ParselTongue mode.")
 
 (defvar psl-mode-syntax-table
