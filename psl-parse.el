@@ -95,7 +95,7 @@
 
     ;; Control structures
     (if        "if" expr "then" expr "else" expr)
-    (while     "while" expr expr)
+    (while     "while" "(?" expr ")?" expr)
     (for       "for" "(" expr ";" expr ";" expr ")" expr)
 
     ;; Identifiers
@@ -164,7 +164,8 @@
                    (destructuring-bind (if cond then expra else exprb) expr
                      `(if ,cond ,expra ,exprb))))
     (while    . ,(lambda (token expr)
-                   `(while ,@(cdr expr))))
+                   (destructuring-bind (while ps cond pe body) expr
+                     `(while ,cond ,body))))
     (for      . ,(lambda (token e)
                    (destructuring-bind (for ps init b1 cond b2 inc pe body) e
                      `(progn ,init (while ,cond ,body ,inc)))))
