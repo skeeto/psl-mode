@@ -20,13 +20,13 @@
   (interactive)
   (pp-display-expression (psl-compile-to-elisp) "*Pp Eval Output*"))
 
-(defun psl-+ (a &args rest)
+(defun psl-+ (a &rest rest)
   "Implement ParselTongue's + function."
   (if (stringp a)
       (apply #'concat (cons a rest))
     (apply #'+ (cons a rest))))
 
-(defun psl-- (a &args rest)
+(defun psl-- (a &rest rest)
   "Implement ParselTongue's - function."
   (if (null rest)
       a
