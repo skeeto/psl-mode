@@ -7,7 +7,7 @@
   (mpd-match 'expr psl-tokens psl-token-funcs))
 
 (defvar psl-tokens
-  '((expr      [block defvar deffun number object lambda funcapp string id])
+  '((expr      [block defvar deffun number object lambda funcall string id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -18,11 +18,11 @@
 
     ;; Identifiers
     (id      . "[a-zA-Z]+")
-    (ids       id [("," id) ""])
+    (ids       id [("," ids) ""])
     (params    "(" ids ")")
 
     ;; Function application
-    (funcapp   id "(" exprs ")")
+    (funcall   id "(" exprs ")")
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
@@ -31,12 +31,18 @@
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
-  `((number . ,(lambda (token num)  (string-to-number num)))
+  `((expr   . ,(lambda (token expr) (car expr)))
+    (number . ,(lambda (token num)  (string-to-number num)))
     (id     . ,(lambda (token name) (intern name)))
     (deffun . ,(lambda (token list)
                  (destructuring-bind (deffun id params expr in inexpr) list
-                   (list token id params expr inexpr))))
-    (string . ,(lambda (token string) (read string))))
+                   (list 'defun id params expr inexpr))))
+    (string . ,(lambda (token string) (read string)))
+    (params . ,(lambda (token params) (nth 1 params)))
+    (ids    . ,(lambda (token ids)
+                 (if (stringp (nth 1 ids))
+                     (list (car ids))
+                   (cons (car ids) (cadadr ids))))))
   "Syntax tree manipulation functions.")
 
 ;;; Parser functions
