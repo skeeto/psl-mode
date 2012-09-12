@@ -1,5 +1,14 @@
 (eval-when-compile (require 'cl))
 
+(defun psl-eval-buffer ()
+  "Evaluate the ParselTongue program in the buffer."
+  (interactive)
+  (let ((buffer (current-buffer)))
+    (with-temp-buffer
+      (insert-buffer-substring buffer) ; lose the text properties
+      (goto-char (point-min))
+      (princ (eval (mpd-match 'expr psl-tokens psl-token-funcs)) t))))
+
 ;;; ParselTongue grammar
 
 (with-current-buffer (get-buffer "*example*")
