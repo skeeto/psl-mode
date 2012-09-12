@@ -22,8 +22,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
 (defgroup psl-mode nil
   "Options for editing ParselTongue code."
   :tag "ParselTongue")
@@ -118,21 +116,16 @@ argument."
   "Run the interpreter (`psl-program-name') on the current buffer
 displaying its output in *psl-output*."
   (interactive)
-  (lexical-let ((out (get-buffer-create "*psl-output*"))
-                (program (buffer-string))
-                (tmpfile (make-temp-file "psl-")))
-    (with-temp-buffer
-      (insert program)
-      (write-file tmpfile))
-    (with-current-buffer out
-      (psl-output-mode)
-      (setq buffer-read-only nil)
-      (erase-buffer))
-    (set-process-sentinel (start-process "psl" out psl-program-name tmpfile)
-                          (lambda (proc state)
-                            (delete-file tmpfile)))
-    (with-current-buffer out (setq buffer-read-only t))
-    (pop-to-buffer out 'other-window)))
+  (let ((program-txt (buffer-string))
+        (tmpfile (make-temp-file "psl-")))
+    (with-temp-file tmpfile (insert program-txt))
+    (pop-to-buffer (get-buffer-create "*psl-output*") 'other-window)
+    (psl-output-mode)
+    (let (buffer-read-only)
+      (erase-buffer)
+      (set-process-sentinel
+       (start-process "psl" (current-buffer) psl-program-name tmpfile)
+       (lambda (proc state) (delete-file (cadr (process-command proc))))))))
 
 (provide 'psl-mode)
 
