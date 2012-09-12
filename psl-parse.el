@@ -101,8 +101,10 @@
     (pairs     pair [("," pairs) ""])
     (pair      id ":" expr)
     (object    "{" [pairs ""] "}")
-    (index     [("(" expr ")") id] "\\." id)
-    (message   [("(" expr ")") id] "@" id "(" aexprs ")"))
+    (index     [("(" expr ")") id] "\\." field)
+    (message   [("(" expr ")") id] "@" [index-str field] "(" aexprs ")")
+    (field   . id)
+    (index-str "\\[" expr "\\]"))
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
@@ -164,14 +166,16 @@
     (print     . ,(lambda (token op) (cons 'psl-print (nth 2 op))))
     (index     . ,(lambda (token index)
                     (let ((obj (nth 0 index)))
-                      `(cdr (assq (quote ,(nth 2 index))
+                      `(cdr (assq ,(nth 2 index)
                                   ,(if (listp obj)
                                        (nth 1 obj)
                                      obj))))))
     (message   . ,(lambda (token msg)
                     (destructuring-bind (obj at f ps args pe) msg
                       (let ((o (if (listp obj) (nth 1 obj) obj)))
-                        `(funcall (cdr (assq (quote ,f) ,o)) ,o ,@args))))))
+                        `(funcall (cdr (assq ,f ,o)) ,o ,@args)))))
+    (field     . ,(lambda (token field) `(quote ,field)))
+    (index-str . ,(lambda (token index) `(intern ,(nth 1 index)))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
