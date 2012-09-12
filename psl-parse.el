@@ -18,7 +18,7 @@
 
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda funcall string
-                true false id])
+                true false if while for id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -28,6 +28,11 @@
     (string  . "\"\\(?:[^\"\\\\]\\|\\\\.\\)*\"")
     (block     "{" exprs "}")
     (exprs     expr [(";" exprs) ""])
+
+    ;; Control structures
+    (if        "if" expr "then" expr "else" expr)
+    (while     "while" expr expr)
+    (for       "for" "(" expr ";" expr ";" expr ")" expr)
 
     ;; Identifiers
     (id      . "[a-zA-Z<>=+-]+")
@@ -67,7 +72,15 @@
                    `(cons (quote ,(nth 0 pair)) ,(nth 2 pair))))
     (pairs    . ,#'psl--tuck)
     (object   . ,(lambda (token obj)
-                   (cons 'list (nth 1 obj)))))
+                   (cons 'list (nth 1 obj))))
+    (if       . ,(lambda (token expr)
+                   (destructuring-bind (if cond then expra else exprb) expr
+                       `(if ,cond ,expra ,exprb))))
+    (while    . ,(lambda (token expr)
+                   `(while ,@(cdr expr))))
+    (for      . ,(lambda (token e)
+                   (destructuring-bind (for ps init b1 cond b2 inc pe body) e
+                     `(progn ,init (while ,cond ,body ,inc))))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
