@@ -43,7 +43,8 @@
     (ids      . ,#'psl--tuck)
     (exprs    . ,(lambda (token exprs) (psl--tuck token exprs)))
     (funcall  . ,(lambda (token call) (cons (nth 0 call) (nth 2 call))))
-    (aexprs   . ,(lambda (token exprs) (psl--tuck token exprs))))
+    (aexprs   . ,(lambda (token exprs) (psl--tuck token exprs)))
+    (block    . ,(lambda (token exprs) (cons 'progn (nth 1 exprs)))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
