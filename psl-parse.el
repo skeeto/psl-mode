@@ -1,3 +1,28 @@
+;;; psl-parse.el --- ParselTongue parser and compiler
+
+;; This is free and unencumbered software released into the public domain.
+
+;; Author: Christopher Wellons <mosquitopsu@gmail.com>
+;; URL: https://github.com/skeeto/psl-mode
+;; Version: 0.1
+
+;;; Commentary:
+
+;; This code parses ParselTongue into s-expressions and compiles those
+;; s-expressions into Emacs Lisp, which can be evaluated directly. You
+;; can use `psl-eval-buffer' to compile the current buffer and
+;; evaluate the result. Compilation output (mainly for compiler
+;; debugging) can be viewed with `psl-show-elisp-compilation'.
+
+;;; Known bugs:
+
+;; * Objects are mutable (object assignment semantics are wrong)
+;; * Equality tests are incomplete
+;; * The empty object is currently nil
+;; * A big pile of semantic issues that I don't know about yet
+
+;;; Code:
+
 (require 'cl)
 (require 'pp)
 
@@ -237,3 +262,7 @@
     (unless result
       (goto-char start))
     result))
+
+(provide 'psl-parse)
+
+;;; psl-parse.el ends here
