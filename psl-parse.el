@@ -1,4 +1,5 @@
-(eval-when-compile (require 'cl))
+(require 'cl)
+(require 'pp)
 
 (defun psl-compile-to-elisp ()
   "Compile the current buffer into an Emacs Lisp s-expression."
@@ -94,7 +95,7 @@
     (inc-post  id "++")
     (dec-pre   "--" id)
     (dec-post  id "--")
-    (assign    id "=" expr)
+    (assign    [index id] "=" expr)
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
@@ -152,8 +153,8 @@
                     (let ((id (car expr)))
                       `(prog1 ,id (setq ,id (1- ,id))))))
     (assign    . ,(lambda (token assign)
-                    (destructuring-bind (id eq expr) assign
-                      `(setq ,id ,expr))))
+                    (destructuring-bind (lhs eq expr) assign
+                      `(setf ,lhs ,expr))))
     (+         . ,(lambda (token op) (cons 'psl-+ (nth 2 op))))
     (-         . ,(lambda (token op) (cons 'psl-- (nth 2 op))))
     (<         . ,(lambda (token op) (cons '< (nth 2 op))))
