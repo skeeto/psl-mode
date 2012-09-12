@@ -1,4 +1,4 @@
-;;; psl-mode.el -- major mode for ParselTongue
+;;; psl-mode.el --- major mode for ParselTongue
 
 ;; This is free and unencumbered software released into the public domain.
 
