@@ -80,7 +80,8 @@
                    `(while ,@(cdr expr))))
     (for      . ,(lambda (token e)
                    (destructuring-bind (for ps init b1 cond b2 inc pe body) e
-                     `(progn ,init (while ,cond ,body ,inc))))))
+                     `(progn ,init (while ,cond ,body ,inc)))))
+    (lambda   . ,(lambda (token lm) (cons 'lambda (cdr lm)))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
