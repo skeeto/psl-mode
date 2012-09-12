@@ -1,4 +1,4 @@
-;;; psl-parse.el --- ParselTongue parser and compiler
+;;; psl-compile.el --- ParselTongue parser and compiler
 
 ;; This is free and unencumbered software released into the public domain.
 
@@ -266,6 +266,6 @@
       (goto-char start))
     result))
 
-(provide 'psl-parse)
+(provide 'psl-compile)
 
-;;; psl-parse.el ends here
+;;; psl-compile.el ends here
