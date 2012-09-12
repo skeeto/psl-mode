@@ -85,6 +85,7 @@
   '((expr      [block defvar deffun number object lambda string
                 true false if while for inc-pre inc-post dec-pre dec-post
                 assign + - == < > print funcall index message id])
+    (pexpr     "(" expr ")")
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -106,7 +107,7 @@
     (params    "(" [ids ""] ")")
 
     ;; Function application
-    (funcall   id args)
+    (funcall   [block index pexpr id] args)
     (args      "(" [aexprs ""] ")")
     (aexprs    expr [("," aexprs) ""])
 
@@ -138,11 +139,13 @@
 
 (defvar psl-token-funcs
   `((expr     . ,(lambda (token expr) (car expr)))
+    (pexpr    . ,(lambda (token expr  (nth 1 expr))))
     (number   . ,(lambda (token num)  (string-to-number num)))
     (id       . ,(lambda (token name) (intern name)))
     (deffun   . ,(lambda (token list)
                    (destructuring-bind (deffun id params expr in body) list
-                     `(flet ((,id ,(if (stringp params) () params) ,expr))
+                     `(let ((,id (lambda ,(if (stringp params) () params)
+                                   ,expr)))
                         ,body))))
     (defvar   . ,(lambda (token list)
                    (destructuring-bind (defvar id eq expr in inexpr) list
@@ -208,16 +211,19 @@
                     (destructuring-bind (obj at f args) msg
                       (let ((o (if (listp obj) (nth 1 obj) obj)))
                         `(funcall (cdr (assq ,f ,o))
-                                  ,@(psl--funcall o args))))))
+                                  ,@(psl--apply o args))))))
     (field     . ,(lambda (token field) `(quote ,field)))
     (index-str . ,(lambda (token index) `(intern ,(nth 1 index))))
     (by-id     . ,(lambda (token id) (cadr id))))
   "Syntax tree manipulation functions.")
 
-(defun psl--funcall (f args)
+(defun psl--apply (f args)
   (if (stringp args)
       (list f)
     (cons f args)))
+
+(defun psl--funcall (f args)
+  `(funcall ,f ,@(if (stringp args) () args)))
 
 (defun psl--tuck (token names)
   (if (stringp (nth 1 names))
