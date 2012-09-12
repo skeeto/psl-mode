@@ -11,7 +11,8 @@
 
 ;;; ParselTongue grammar
 
-(with-current-buffer (get-buffer-create "*example*")
+(with-temp-buffer
+  (insert-buffer-substring (get-buffer-create "*example*"))
   (goto-char (point-min))
   (mpd-match 'expr psl-tokens psl-token-funcs))
 
