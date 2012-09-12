@@ -26,6 +26,9 @@
 
 (defvar psl-mode-hook nil
   "Hook for ParselTongue mode.")
+(defgroup psl-mode nil
+  "Options for editing ParselTongue code."
+  :tag "ParselTongue")
 
 (defvar psl-mode-map
   (let ((map (make-sparse-keymap)))
@@ -33,9 +36,13 @@
     map)
   "Keymap for ParselTongue mode.")
 
-(defvar psl-program-name "psl"
-  "The path to an interpreter which accepts a ParselTongue
-program filename as its first argument.")
+(defcustom psl-program-name "psl"
+  "Path to the ParselTongue interpreter.
+
+Program must accept a ParselTongue program filename as its first
+argument."
+  :group 'psl-mode
+  :type '(file :must-match t))
 
 (defvar psl--keywords
   '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda"))
@@ -52,8 +59,10 @@ program filename as its first argument.")
    '("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for ParselTongue mode.")
 
-(defvar psl-indent-width 4
-  "Indent width for ParselTongue mode.")
+(defcustom psl-indent-width 4
+  "Indent width for ParselTongue mode."
+  :group 'psl-mode
+  :type 'integer)
 
 (defvar psl-mode-syntax-table
   (let ((st (make-syntax-table)))
