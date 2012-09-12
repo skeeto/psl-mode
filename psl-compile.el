@@ -35,7 +35,11 @@
       (insert-buffer-substring buffer) ; lose the text properties
       (psl-remove-comments)
       (goto-char (point-min))
-      (mpd-match 'expr psl-tokens psl-token-funcs))))
+      (let ((sexp (mpd-match 'expr psl-tokens psl-token-funcs)))
+        (mpd-skip-whitespace)
+        (if (= (point) (point-max))
+            sexp
+          (error "parse error"))))))
 
 (defun psl-eval-buffer ()
   "Evaluate the ParselTongue program in the buffer."
@@ -266,9 +270,13 @@
     (let ((match (mpd-match option tokens funcs)))
       (when match (return match)))))
 
+(defun mpd-skip-whitespace ()
+  "Skip over all whitespace."
+  (search-forward-regexp "[[:space:]]*"))
+
 (defun mpd-match (pattern tokens &optional funcs)
   "Match the given pattern object of any type (toplevel)."
-  (search-forward-regexp "[[:space:]]*")
+  (mpd-skip-whitespace)
   (let ((start (point))
         (result (etypecase pattern
                   (string (mpd-match-regex pattern tokens funcs))
