@@ -16,9 +16,11 @@
 
 ;;; Known bugs:
 
-;; * Objects are mutable (object assignment semantics are wrong)
+;; * Assignment is an issue right now
+;;   * Objects are mutable (object assignment semantics are wrong)
+;;   * Operators += and -= not yet implemented
 ;; * Equality tests are incomplete
-;; * The empty object is currently nil
+;; * The empty object is currently (), so it evaluates to false
 ;; * A big pile of semantic issues that I don't know about yet
 
 ;;; Code:
