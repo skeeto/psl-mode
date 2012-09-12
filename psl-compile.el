@@ -104,7 +104,7 @@
     ;; Identifiers
     (id      . "[a-zA-Z<>=]+")
     (ids       id [("," ids) ""])
-    (params    "(" ids ")")
+    (params    "(" [ids ""] ")")
 
     ;; Function application
     (funcall   id args)
@@ -142,8 +142,9 @@
     (number   . ,(lambda (token num)  (string-to-number num)))
     (id       . ,(lambda (token name) (intern name)))
     (deffun   . ,(lambda (token list)
-                   (destructuring-bind (deffun id params expr in inexpr) list
-                     `(flet ((,id ,params ,expr)) ,inexpr))))
+                   (destructuring-bind (deffun id params expr in body) list
+                     `(flet ((,id ,(if (stringp params) () params) ,expr))
+                        ,body))))
     (defvar   . ,(lambda (token list)
                    (destructuring-bind (defvar id eq expr in inexpr) list
                      `(let ((,id ,expr)) ,inexpr))))
@@ -174,7 +175,9 @@
     (for      . ,(lambda (token e)
                    (destructuring-bind (for ps init b1 cond b2 inc pe body) e
                      `(progn ,init (while ,cond ,body ,inc)))))
-    (lambda   . ,(lambda (token lm) (cons 'lambda (cdr lm))))
+    (lambda   . ,(lambda (token lm)
+                   (destructuring-bind (fn params body) lm
+                     `(lambda ,(if (stringp params) () params) ,body))))
     (inc-pre  . ,(lambda (token expr)
                    (let ((id (cadr expr)))
                      `(setq ,id (1+ ,id)))))
