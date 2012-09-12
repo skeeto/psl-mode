@@ -32,7 +32,7 @@
 Program must accept a ParselTongue program filename as its first
 argument."
   :group 'psl-mode
-  :type '(file :must-match t))
+  :type 'file)
 
 (defcustom psl-indent-width 4
   "Indent width for ParselTongue mode."
