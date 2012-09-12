@@ -24,8 +24,6 @@
 
 (eval-when-compile (require 'cl))
 
-(defvar psl-mode-hook nil
-  "Hook for ParselTongue mode.")
 (defgroup psl-mode nil
   "Options for editing ParselTongue code."
   :tag "ParselTongue")
@@ -104,18 +102,11 @@ argument."
       (indent-line-to (max 0 (or cur-indent 0))))))
 
 ;;;###autoload
-(defun psl-mode ()
-  "Mode for editing ParselTongue code. \\{psl-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map psl-mode-map)
-  (set-syntax-table psl-mode-syntax-table)
+(define-derived-mode psl-mode prog-mode "Parsel"
+  :group 'psl-mode
   (set (make-local-variable 'font-lock-defaults) '(psl-font-lock-keywords))
   (set (make-local-variable 'indent-line-function) 'psl-indent-line)
-  (set (make-local-variable 'comment-start) "#")
-  (setq major-mode 'psl-mode)
-  (setq mode-name "ParselTongue")
-  (run-hooks 'psl-mode-hook))
+  (set (make-local-variable 'comment-start) "#"))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.psl\\'" . psl-mode))
