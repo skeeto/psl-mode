@@ -72,7 +72,10 @@
                    `(cons (quote ,(nth 0 pair)) ,(nth 2 pair))))
     (pairs    . ,#'psl--tuck)
     (object   . ,(lambda (token obj)
-                   (cons 'list (nth 1 obj))))
+                   (let ((fields (nth 1 obj)))
+                     (if (stringp fields)
+                         (list 'list)
+                       (cons 'list fields)))))
     (if       . ,(lambda (token expr)
                    (destructuring-bind (if cond then expra else exprb) expr
                        `(if ,cond ,expra ,exprb))))
