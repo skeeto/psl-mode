@@ -7,7 +7,31 @@
     (with-temp-buffer
       (insert-buffer-substring buffer) ; lose the text properties
       (goto-char (point-min))
-      (princ (eval (mpd-match 'expr psl-tokens psl-token-funcs)) t))))
+      (psl-print (eval (mpd-match 'expr psl-tokens psl-token-funcs))))))
+
+(defun psl-+ (a &args rest)
+  "Implement ParselTongue's + function."
+  (if (stringp a)
+      (apply #'concat (cons a rest))
+    (apply #'+ (cons a rest))))
+
+(defun psl-- (a &args rest)
+  "Implement ParselTongue's - function."
+  (if (null rest)
+      a
+    (apply #'- (cons a rest))))
+
+(defun psl-== (a b)
+  "Implement ParselTongue's == function."
+  (equal a b))
+
+(defun psl-print (o)
+  "Implement ParselTongue's print function."
+  (typecase o
+    (function (princ "function" t))
+    (list     (princ "object" t))
+    (t (princ o t)))
+  o)
 
 ;;; ParselTongue grammar
 
@@ -17,9 +41,9 @@
   (mpd-match 'expr psl-tokens psl-token-funcs))
 
 (defvar psl-tokens
-  '((expr      [block defvar deffun number object lambda funcall string
+  '((expr      [block defvar deffun number object lambda string
                 true false if while for inc-pre inc-post dec-pre dec-post
-                assign id])
+                assign + - == < > print funcall id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -44,6 +68,14 @@
     (funcall   id "(" aexprs ")")
     (aexprs    expr [("," aexprs) ""])
 
+    ;; Builtins
+    (+         "+" "(" aexprs ")")
+    (-         "-" "(" aexprs ")")
+    (==        "==" "(" aexprs ")")
+    (<         "<" "(" aexprs ")")
+    (>         ">" "(" aexprs ")")
+    (print     "print" "(" aexprs ")")
+
     ;; Operators
     (inc-pre   "++" id)
     (inc-post  id "++")
@@ -62,11 +94,11 @@
     (number   . ,(lambda (token num)  (string-to-number num)))
     (id       . ,(lambda (token name) (intern name)))
     (deffun   . ,(lambda (token list)
-                 (destructuring-bind (deffun id params expr in inexpr) list
-                   `(flet ((,id ,params ,expr)) ,inexpr))))
+                   (destructuring-bind (deffun id params expr in inexpr) list
+                     `(flet ((,id ,params ,expr)) ,inexpr))))
     (defvar   . ,(lambda (token list)
-                 (destructuring-bind (defvar id eq expr in inexpr) list
-                   `(let ((,id ,expr)) ,inexpr))))
+                   (destructuring-bind (defvar id eq expr in inexpr) list
+                     `(let ((,id ,expr)) ,inexpr))))
     (string   . ,(lambda (token string) (read string)))
     (params   . ,(lambda (token params) (nth 1 params)))
     (ids      . ,#'psl--tuck)
@@ -86,7 +118,7 @@
                        (cons 'list fields)))))
     (if       . ,(lambda (token expr)
                    (destructuring-bind (if cond then expra else exprb) expr
-                       `(if ,cond ,expra ,exprb))))
+                     `(if ,cond ,expra ,exprb))))
     (while    . ,(lambda (token expr)
                    `(while ,@(cdr expr))))
     (for      . ,(lambda (token e)
@@ -107,7 +139,13 @@
                       `(prog1 ,id (setq ,id (1- ,id))))))
     (assign    . ,(lambda (token assign)
                     (destructuring-bind (id eq expr) assign
-                      `(setq ,id ,expr)))))
+                      `(setq ,id ,expr))))
+    (+         . ,(lambda (token op) (cons 'psl-+ (nth 2 op))))
+    (-         . ,(lambda (token op) (cons 'psl-- (nth 2 op))))
+    (<         . ,(lambda (token op) (cons '< (nth 2 op))))
+    (>         . ,(lambda (token op) (cons '> (nth 2 op))))
+    (==        . ,(lambda (token op) (cons 'psl-== (nth 2 op))))
+    (print     . ,(lambda (token op) (cons 'psl-print (nth 2 op)))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
