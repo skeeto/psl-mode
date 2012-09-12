@@ -18,7 +18,8 @@
 
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda funcall string
-                true false if while for inc-pre inc-post dec-pre dec-post id])
+                true false if while for inc-pre inc-post dec-pre dec-post
+                assign id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -48,6 +49,7 @@
     (inc-post  id "++")
     (dec-pre   "--" id)
     (dec-post  id "--")
+    (assign    id "=" expr)
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
@@ -102,7 +104,10 @@
                       `(prog1 ,id (setq ,id (1+ ,id))))))
     (dec-post  . ,(lambda (token expr)
                     (let ((id (car expr)))
-                      `(prog1 ,id (setq ,id (1- ,id)))))))
+                      `(prog1 ,id (setq ,id (1- ,id))))))
+    (assign    . ,(lambda (token assign)
+                    (destructuring-bind (id eq expr) assign
+                      `(setq ,id ,expr)))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
