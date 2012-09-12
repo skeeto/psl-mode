@@ -162,10 +162,10 @@
     (print     . ,(lambda (token op) (cons 'psl-print (nth 2 op))))
     (index     . ,(lambda (token index)
                     (let ((obj (nth 0 index)))
-                      `(cdr (assoc (quote ,(nth 2 index))
-                                   ,(if (listp obj)
-                                        (nth 1 obj)
-                                      obj)))))))
+                      `(cdr (assq (quote ,(nth 2 index))
+                                  ,(if (listp obj)
+                                       (nth 1 obj)
+                                     obj)))))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
@@ -177,7 +177,7 @@
 
 (defun mpd-get-token-func (token funcs)
   "Get the manipulation function for the given token."
-  (or (cdr (assoc token funcs)) #'cons))
+  (or (cdr (assq token funcs)) #'cons))
 
 (defun mpd-parse (tokens &optional funcs)
   "Return the next item in the current buffer."
@@ -203,7 +203,7 @@
 
 (defun mpd-match-token (token tokens funcs)
   "Match a token by name (symbol)."
-  (let* ((pattern (cdr (assoc token tokens)))
+  (let* ((pattern (cdr (assq token tokens)))
          (match (mpd-match pattern tokens funcs)))
     (when match (funcall (mpd-get-token-func token funcs) token match))))
 
