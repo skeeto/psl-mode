@@ -56,7 +56,7 @@
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda string
                 true false if while for inc-pre inc-post dec-pre dec-post
-                assign + - == < > print funcall id])
+                assign + - == < > print funcall index id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -99,7 +99,8 @@
     ;; Objects
     (pairs     pair [("," pairs) ""])
     (pair      id ":" expr)
-    (object    "{" [pairs ""] "}"))
+    (object    "{" [pairs ""] "}")
+    (index     [id ("(" expr ")")] "\\." id))
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
@@ -158,7 +159,13 @@
     (<         . ,(lambda (token op) (cons '< (nth 2 op))))
     (>         . ,(lambda (token op) (cons '> (nth 2 op))))
     (==        . ,(lambda (token op) (cons 'psl-== (nth 2 op))))
-    (print     . ,(lambda (token op) (cons 'psl-print (nth 2 op)))))
+    (print     . ,(lambda (token op) (cons 'psl-print (nth 2 op))))
+    (index     . ,(lambda (token index)
+                    (let ((obj (nth 0 index)))
+                      `(cdr (assoc (quote ,(nth 2 index))
+                                   ,(if (listp obj)
+                                        (nth 1 obj)
+                                      obj)))))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
