@@ -17,10 +17,13 @@
   (mpd-match 'expr psl-tokens psl-token-funcs))
 
 (defvar psl-tokens
-  '((expr      [block defvar deffun number object lambda funcall string id])
+  '((expr      [block defvar deffun number object lambda funcall string
+                true false id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
+    (true      "true")
+    (false     "false")
     (number  . "[0-9]+")
     (string  . "\"\\(?:[^\"\\\\]\\|\\\\.\\)*\"")
     (block     "{" exprs "}")
