@@ -1,23 +1,23 @@
-(setq lexical-binding t)
-
-(with-current-buffer (get-buffer "*example*")
-  (goto-char (point-min))
-  ;(mpd-parse psl-tokens)
-  (mpd-match 'expr psl-tokens psl-token-funcs))
+(eval-when-compile (require 'cl))
 
 ;;; ParselTongue grammar
 
+(with-current-buffer (get-buffer "*example*")
+  (goto-char (point-min))
+  (mpd-match 'expr psl-tokens psl-token-funcs))
+
 (defvar psl-tokens
-  '((expr      [block defvar deffun number object lambda funcapp id])
+  '((expr      [block defvar deffun number object lambda funcapp string id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
-    (number    "[0-9]+")
+    (number  . "[0-9]+")
+    (string  . "\"\\(?:[^\"\\\\]\\|\\\\.\\)*\"")
     (block     "{" exprs "}")
     (exprs     expr [(";" exprs) ""])
 
     ;; Identifiers
-    (id        "[a-zA-Z]+")
+    (id      . "[a-zA-Z]+")
     (ids       id [("," id) ""])
     (params    "(" ids ")")
 
@@ -31,7 +31,12 @@
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
-  `((number . ,(lambda (token num) (string-to-number (car num)))))
+  `((number . ,(lambda (token num)  (string-to-number num)))
+    (id     . ,(lambda (token name) (intern name)))
+    (deffun . ,(lambda (token list)
+                 (destructuring-bind (deffun id params expr in inexpr) list
+                   (list token id params expr inexpr))))
+    (string . ,(lambda (token string) (read string))))
   "Syntax tree manipulation functions.")
 
 ;;; Parser functions
