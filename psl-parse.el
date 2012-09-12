@@ -17,12 +17,13 @@
     (exprs     expr [(";" exprs) ""])
 
     ;; Identifiers
-    (id      . "[a-zA-Z]+")
+    (id      . "[a-zA-Z<>=+-]+")
     (ids       id [("," ids) ""])
     (params    "(" ids ")")
 
     ;; Function application
-    (funcall   id "(" exprs ")")
+    (funcall   id "(" aexprs ")")
+    (aexprs    expr [("," aexprs) ""])
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
@@ -31,19 +32,24 @@
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
-  `((expr   . ,(lambda (token expr) (car expr)))
-    (number . ,(lambda (token num)  (string-to-number num)))
-    (id     . ,(lambda (token name) (intern name)))
-    (deffun . ,(lambda (token list)
+  `((expr     . ,(lambda (token expr) (car expr)))
+    (number   . ,(lambda (token num)  (string-to-number num)))
+    (id       . ,(lambda (token name) (intern name)))
+    (deffun   . ,(lambda (token list)
                  (destructuring-bind (deffun id params expr in inexpr) list
                    (list 'defun id params expr inexpr))))
-    (string . ,(lambda (token string) (read string)))
-    (params . ,(lambda (token params) (nth 1 params)))
-    (ids    . ,(lambda (token ids)
-                 (if (stringp (nth 1 ids))
-                     (list (car ids))
-                   (cons (car ids) (cadadr ids))))))
+    (string   . ,(lambda (token string) (read string)))
+    (params   . ,(lambda (token params) (nth 1 params)))
+    (ids      . ,#'psl--tuck)
+    (exprs    . ,(lambda (token exprs) (psl--tuck token exprs)))
+    (funcall  . ,(lambda (token call) (cons (nth 0 call) (nth 2 call))))
+    (aexprs   . ,(lambda (token exprs) (psl--tuck token exprs))))
   "Syntax tree manipulation functions.")
+
+(defun psl--tuck (token names)
+  (if (stringp (nth 1 names))
+      (list (car names))
+    (cons (car names) (cadadr names))))
 
 ;;; Parser functions
 
