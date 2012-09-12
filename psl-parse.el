@@ -1,14 +1,23 @@
 (eval-when-compile (require 'cl))
 
-(defun psl-eval-buffer ()
-  "Evaluate the ParselTongue program in the buffer."
-  (interactive)
+(defun psl-compile-to-elisp ()
+  "Compile the current buffer into an Emacs Lisp s-expression."
   (let ((buffer (current-buffer)))
     (with-temp-buffer
       (insert-buffer-substring buffer) ; lose the text properties
       (psl-remove-comments)
       (goto-char (point-min))
-      (psl-print (eval (mpd-match 'expr psl-tokens psl-token-funcs))))))
+      (mpd-match 'expr psl-tokens psl-token-funcs))))
+
+(defun psl-eval-buffer ()
+  "Evaluate the ParselTongue program in the buffer."
+  (interactive)
+  (psl-print (eval (psl-compile-to-elisp))))
+
+(defun psl-show-elisp-compilation ()
+  "Show the Emacs Lisp compilation in a buffer."
+  (interactive)
+  (pp-display-expression (psl-compile-to-elisp) "*Pp Eval Output*"))
 
 (defun psl-+ (a &args rest)
   "Implement ParselTongue's + function."
@@ -35,6 +44,7 @@
   o)
 
 (defun psl-remove-comments ()
+  "Remove ParselTongue comments from the current buffer."
   (interactive)
   (save-excursion
     (goto-char (point-min))
@@ -42,12 +52,6 @@
       (replace-match "" nil nil))))
 
 ;;; ParselTongue grammar
-
-(with-temp-buffer
-  (insert-buffer-substring (get-buffer-create "*example*"))
-  (psl-remove-comments)
-  (goto-char (point-min))
-  (mpd-match 'expr psl-tokens psl-token-funcs))
 
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda string
