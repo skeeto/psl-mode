@@ -16,7 +16,6 @@
 
 ;;; Known bugs:
 
-;; * No empty parameter or argument lists
 ;; * Assignment is an issue right now
 ;;   * Objects are mutable (object assignment semantics are wrong)
 ;;   * Operators += and -= not yet implemented
