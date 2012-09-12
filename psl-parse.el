@@ -6,6 +6,7 @@
   (let ((buffer (current-buffer)))
     (with-temp-buffer
       (insert-buffer-substring buffer) ; lose the text properties
+      (psl-remove-comments)
       (goto-char (point-min))
       (psl-print (eval (mpd-match 'expr psl-tokens psl-token-funcs))))))
 
@@ -33,10 +34,18 @@
     (t (princ o t)))
   o)
 
+(defun psl-remove-comments ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "#[^\n]*\n" nil t)
+      (replace-match "" nil nil))))
+
 ;;; ParselTongue grammar
 
 (with-temp-buffer
   (insert-buffer-substring (get-buffer-create "*example*"))
+  (psl-remove-comments)
   (goto-char (point-min))
   (mpd-match 'expr psl-tokens psl-token-funcs))
 
