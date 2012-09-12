@@ -60,7 +60,7 @@
     (false     "false")
     (number  . "[0-9]+")
     (string  . "\"\\(?:[^\"\\\\]\\|\\\\.\\)*\"")
-    (block     "{" exprs "}")
+    (block     "{" exprs ";?" "}")
     (exprs     expr [(";" exprs) ""])
 
     ;; Control structures
