@@ -62,7 +62,7 @@
     (aexprs   . ,(lambda (token exprs) (psl--tuck token exprs)))
     (block    . ,(lambda (token exprs) (cons 'progn (nth 1 exprs))))
     (true     . ,(lambda (token true) t))
-    (false    . ,(lambda (token false) nil))
+    (false    . ,(lambda (token false) '(not t))) ; can't return nil
     (pair     . ,(lambda (token pair)
                    `(cons (quote ,(nth 0 pair)) ,(nth 2 pair))))
     (pairs    . ,#'psl--tuck)
