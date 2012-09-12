@@ -84,7 +84,7 @@
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda string
                 true false if while for inc-pre inc-post dec-pre dec-post
-                assign + - == < > print funcall index message id])
+                assign + - == < > print funcall index message pexpr id])
     (pexpr     "(" expr ")")
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
