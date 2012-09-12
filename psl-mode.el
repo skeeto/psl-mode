@@ -45,9 +45,11 @@ argument."
   :type '(file :must-match t))
 
 (defvar psl--keywords
-  '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda"))
+  '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda" "for"))
+
 (defvar psl--builtin
   '("<" ">" "+" "-" "==" "print"))
+
 (defvar psl--constants
   '("true" "false"))
 
