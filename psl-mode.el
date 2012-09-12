@@ -1,4 +1,4 @@
-;;; psl-mode.el -- major mode for ParselTongue
+;;; psl-mode.el --- major mode for ParselTongue
 
 ;; This is free and unencumbered software released into the public domain.
 
@@ -22,10 +22,22 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(defgroup psl-mode nil
+  "Options for editing ParselTongue code."
+  :tag "ParselTongue")
 
-(defvar psl-mode-hook nil
-  "Hook for ParselTongue mode.")
+(defcustom psl-program-name "psl"
+  "Path to the ParselTongue interpreter.
+
+Program must accept a ParselTongue program filename as its first
+argument."
+  :group 'psl-mode
+  :type 'file)
+
+(defcustom psl-indent-width 4
+  "Indent width for ParselTongue mode."
+  :group 'psl-mode
+  :type 'integer)
 
 (defvar psl-mode-map
   (let ((map (make-sparse-keymap)))
@@ -33,27 +45,21 @@
     map)
   "Keymap for ParselTongue mode.")
 
-(defvar psl-program-name "psl"
-  "The path to an interpreter which accepts a ParselTongue
-program filename as its first argument.")
+(defconst psl--keywords
+  '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda" "for"))
 
-(defvar psl--keywords
-  '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda"))
-(defvar psl--builtin
+(defconst psl--builtin
   '("<" ">" "+" "-" "==" "print"))
-(defvar psl--constants
+
+(defconst psl--constants
   '("true" "false"))
 
 (defconst psl-font-lock-keywords
-  (list
-   `(,(regexp-opt psl--keywords 'words) . font-lock-keyword-face)
-   `(,(regexp-opt psl--constants 'words) . font-lock-constant-face)
-   `(,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
-   '("\\('\\w*'\\)" . font-lock-variable-name-face))
+  `((,(regexp-opt psl--keywords 'words) . font-lock-keyword-face)
+    (,(regexp-opt psl--constants 'words) . font-lock-constant-face)
+    (,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
+    ("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for ParselTongue mode.")
-
-(defvar psl-indent-width 4
-  "Indent width for ParselTongue mode.")
 
 (defvar psl-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -93,18 +99,11 @@ program filename as its first argument.")
       (indent-line-to (max 0 (or cur-indent 0))))))
 
 ;;;###autoload
-(defun psl-mode ()
-  "Mode for editing ParselTongue code. \\{psl-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
-  (use-local-map psl-mode-map)
-  (set-syntax-table psl-mode-syntax-table)
+(define-derived-mode psl-mode prog-mode "Parsel"
+  :group 'psl-mode
   (set (make-local-variable 'font-lock-defaults) '(psl-font-lock-keywords))
   (set (make-local-variable 'indent-line-function) 'psl-indent-line)
-  (set (make-local-variable 'comment-start) "#")
-  (setq major-mode 'psl-mode)
-  (setq mode-name "ParselTongue")
-  (run-hooks 'psl-mode-hook))
+  (set (make-local-variable 'comment-start) "#"))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.psl\\'" . psl-mode))
@@ -116,21 +115,20 @@ program filename as its first argument.")
   "Run the interpreter (`psl-program-name') on the current buffer
 displaying its output in *psl-output*."
   (interactive)
-  (lexical-let ((out (get-buffer-create "*psl-output*"))
-                (program (buffer-string))
-                (tmpfile (make-temp-file "psl-")))
-    (with-temp-buffer
-      (insert program)
-      (write-file tmpfile))
-    (with-current-buffer out
-      (psl-output-mode)
-      (setq buffer-read-only nil)
-      (erase-buffer))
-    (set-process-sentinel (start-process "psl" out psl-program-name tmpfile)
-                          (lambda (proc state)
-                            (delete-file tmpfile)))
-    (with-current-buffer out (setq buffer-read-only t))
-    (pop-to-buffer out 'other-window)))
+  (let ((program-txt (buffer-string))
+        (tmpfile (make-temp-file "psl-")))
+    (with-temp-file tmpfile (insert program-txt))
+
+    (pop-to-buffer (get-buffer-create "*psl-output*") 'other-window)
+    (psl-output-mode)
+    (let (buffer-read-only)
+      (erase-buffer)
+      (set-process-sentinel
+       (start-process "psl"
+                      (current-buffer)
+                      psl-program-name
+                      tmpfile)
+       `(lambda (proc state) (delete-file ,tmpfile))))))
 
 (provide 'psl-mode)
 
