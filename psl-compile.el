@@ -21,6 +21,7 @@
 ;;   * Operators += and -= not yet implemented
 ;; * Equality tests are incomplete
 ;; * The empty object is currently (), so it evaluates to false
+;; * At least a couple parser issues (max-lisp-eval-depth errors)
 ;; * A big pile of semantic issues that I don't know about yet
 
 ;;; Code:
