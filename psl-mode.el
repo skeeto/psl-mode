@@ -28,12 +28,6 @@
   "Options for editing ParselTongue code."
   :tag "ParselTongue")
 
-(defvar psl-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-r") 'psl-run-buffer)
-    map)
-  "Keymap for ParselTongue mode.")
-
 (defcustom psl-program-name "psl"
   "Path to the ParselTongue interpreter.
 
@@ -42,13 +36,24 @@ argument."
   :group 'psl-mode
   :type '(file :must-match t))
 
-(defvar psl--keywords
+(defcustom psl-indent-width 4
+  "Indent width for ParselTongue mode."
+  :group 'psl-mode
+  :type 'integer)
+
+(defvar psl-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-r") 'psl-run-buffer)
+    map)
+  "Keymap for ParselTongue mode.")
+
+(defconst psl--keywords
   '("deffun" "defvar" "in" "if" "then" "else" "while" "lambda" "for"))
 
-(defvar psl--builtin
+(defconst psl--builtin
   '("<" ">" "+" "-" "==" "print"))
 
-(defvar psl--constants
+(defconst psl--constants
   '("true" "false"))
 
 (defconst psl-font-lock-keywords
@@ -58,11 +63,6 @@ argument."
    `(,(regexp-opt psl--builtin 'words) . font-lock-builtin-face)
    '("\\('\\w*'\\)" . font-lock-variable-name-face))
   "Minimal highlighting expressions for ParselTongue mode.")
-
-(defcustom psl-indent-width 4
-  "Indent width for ParselTongue mode."
-  :group 'psl-mode
-  :type 'integer)
 
 (defvar psl-mode-syntax-table
   (let ((st (make-syntax-table)))
