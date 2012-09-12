@@ -139,7 +139,7 @@
 
 (defvar psl-token-funcs
   `((expr     . ,(lambda (token expr) (car expr)))
-    (pexpr    . ,(lambda (token expr  (nth 1 expr))))
+    (pexpr    . ,(lambda (token expr)  (nth 1 expr)))
     (number   . ,(lambda (token num)  (string-to-number num)))
     (id       . ,(lambda (token name) (intern name)))
     (deffun   . ,(lambda (token list)
