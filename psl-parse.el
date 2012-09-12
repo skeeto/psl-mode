@@ -18,7 +18,7 @@
 
 (defvar psl-tokens
   '((expr      [block defvar deffun number object lambda funcall string
-                true false if while for id])
+                true false if while for inc-pre inc-post dec-pre dec-post id])
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
     (lambda    "lambda" params expr)
@@ -35,13 +35,19 @@
     (for       "for" "(" expr ";" expr ";" expr ")" expr)
 
     ;; Identifiers
-    (id      . "[a-zA-Z<>=+-]+")
+    (id      . "[a-zA-Z<>=]+")
     (ids       id [("," ids) ""])
     (params    "(" ids ")")
 
     ;; Function application
     (funcall   id "(" aexprs ")")
     (aexprs    expr [("," aexprs) ""])
+
+    ;; Operators
+    (inc-pre   "++" id)
+    (inc-post  id "++")
+    (dec-pre   "--" id)
+    (dec-post  id "--")
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
@@ -84,7 +90,19 @@
     (for      . ,(lambda (token e)
                    (destructuring-bind (for ps init b1 cond b2 inc pe body) e
                      `(progn ,init (while ,cond ,body ,inc)))))
-    (lambda   . ,(lambda (token lm) (cons 'lambda (cdr lm)))))
+    (lambda   . ,(lambda (token lm) (cons 'lambda (cdr lm))))
+    (inc-pre  . ,(lambda (token expr)
+                   (let ((id (cadr expr)))
+                     `(setq ,id (1+ ,id)))))
+    (dec-pre  . ,(lambda (token expr)
+                   (let ((id (cadr expr)))
+                     `(setq ,id (1- ,id)))))
+    (inc-post  . ,(lambda (token expr)
+                    (let ((id (car expr)))
+                      `(prog1 ,id (setq ,id (1+ ,id))))))
+    (dec-post  . ,(lambda (token expr)
+                    (let ((id (car expr)))
+                      `(prog1 ,id (setq ,id (1- ,id)))))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
