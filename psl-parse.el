@@ -41,7 +41,7 @@
     ;; Objects
     (pairs     pair [("," pairs) ""])
     (pair      id ":" expr)
-    (object    "{" ["" pairs] "}"))
+    (object    "{" [pairs ""] "}"))
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
@@ -51,13 +51,23 @@
     (deffun   . ,(lambda (token list)
                  (destructuring-bind (deffun id params expr in inexpr) list
                    `(flet ((,id ,params ,expr)) ,inexpr))))
+    (defvar   . ,(lambda (token list)
+                 (destructuring-bind (defvar id eq expr in inexpr) list
+                   `(let ((,id ,expr)) ,inexpr))))
     (string   . ,(lambda (token string) (read string)))
     (params   . ,(lambda (token params) (nth 1 params)))
     (ids      . ,#'psl--tuck)
     (exprs    . ,(lambda (token exprs) (psl--tuck token exprs)))
     (funcall  . ,(lambda (token call) (cons (nth 0 call) (nth 2 call))))
     (aexprs   . ,(lambda (token exprs) (psl--tuck token exprs)))
-    (block    . ,(lambda (token exprs) (cons 'progn (nth 1 exprs)))))
+    (block    . ,(lambda (token exprs) (cons 'progn (nth 1 exprs))))
+    (true     . ,(lambda (token true) t))
+    (false    . ,(lambda (token false) nil))
+    (pair     . ,(lambda (token pair)
+                   `(cons (quote ,(nth 0 pair)) ,(nth 2 pair))))
+    (pairs    . ,#'psl--tuck)
+    (object   . ,(lambda (token obj)
+                   (cons 'list (nth 1 obj)))))
   "Syntax tree manipulation functions.")
 
 (defun psl--tuck (token names)
