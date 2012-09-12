@@ -37,7 +37,7 @@
     (id       . ,(lambda (token name) (intern name)))
     (deffun   . ,(lambda (token list)
                  (destructuring-bind (deffun id params expr in inexpr) list
-                   (list 'defun id params expr inexpr))))
+                   `(flet ((,id ,params ,expr)) ,inexpr))))
     (string   . ,(lambda (token string) (read string)))
     (params   . ,(lambda (token params) (nth 1 params)))
     (ids      . ,#'psl--tuck)
