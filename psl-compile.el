@@ -14,6 +14,13 @@
 ;; evaluate the result. Compilation output (mainly for compiler
 ;; debugging) can be viewed with `psl-show-elisp-compilation'.
 
+;; Parsing actually requires *a lot* of stack space and there's not
+;; much that can be done about it. Fortunately Emacs is capable of
+;; providing plenty of stack for parsing but the default limit set by
+;; `max-lisp-eval-depth' (600) is too low. To work around this,
+;; temporarily while parsing the parser will increase the stack size
+;; by a factor of `psl-stack-multiplier'.
+
 ;;; Known bugs:
 
 ;; * Assignment is an issue right now
@@ -29,6 +36,9 @@
 (require 'cl)
 (require 'pp)
 
+(defvar psl-stack-multiplier 4
+  "Increase `max-lisp-eval-depth' by this factor when parsing.")
+
 (defun psl-compile-to-elisp ()
   "Compile the current buffer into an Emacs Lisp s-expression."
   (let ((buffer (current-buffer)))
@@ -36,7 +46,10 @@
       (insert-buffer-substring buffer) ; lose the text properties
       (psl-remove-comments)
       (goto-char (point-min))
-      (let ((sexp (mpd-match 'expr psl-tokens psl-token-funcs)))
+      (let ((sexp
+             (let ((max-lisp-eval-depth
+                    (floor (* psl-stack-multiplier max-lisp-eval-depth))))
+               (mpd-match 'expr psl-tokens psl-token-funcs))))
         (mpd-skip-whitespace)
         (if (= (point) (point-max))
             sexp
