@@ -31,7 +31,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(eval-when-compile (require 'cl))
 (require 'pp)
 
 (defvar psl-stack-multiplier 4
@@ -309,7 +309,7 @@ can be used to determine where parsing failed.")
 
 (defun mpd-match-or (vec tokens funcs)
   "Match at least one pattern in the vector."
-  (dolist (option (coerce vec 'list))
+  (dolist (option (mapcar 'identity vec))
     (let ((match (mpd-match option tokens funcs)))
       (when match (return match)))))
 
