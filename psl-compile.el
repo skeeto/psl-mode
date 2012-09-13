@@ -221,7 +221,7 @@
                       (if (symbolp lhs)
                           `(setq ,lhs ,expr)
                         (destructuring-bind (obj field) lhs
-                          (let ((obj-sym (gensym)))
+                          (let ((obj-sym (make-symbol "obj")))
                             `(let ((,obj-sym (copy-alist ,obj)))
                                (setcdr (assq ,field (cdr ,obj-sym)) ,expr)
                                ,obj-sym)))))))
@@ -231,7 +231,7 @@
                         (if (symbolp lhs)
                             `(setq ,lhs (,op ,lhs ,expr))
                           (destructuring-bind (obj field) lhs
-                            (let ((obj-sym (gensym)))
+                            (let ((obj-sym (make-symbol "obj")))
                               `(let ((,obj-sym (copy-alist ,obj)))
                                  (setcdr (assq ,field (cdr ,obj-sym))
                                          (,op (cdr (assq ,field (cdr ,obj-sym)))
