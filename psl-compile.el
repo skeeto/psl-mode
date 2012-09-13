@@ -23,10 +23,10 @@
 
 ;;; Known bugs:
 
-;; * Assignment is an issue right now
-;;   * Operators += and -= not yet implemented
+;; * Operators += and -= not yet implemented
 ;; * Equality tests are incomplete
 ;; * The empty object is currently (), so it evaluates to false
+;; * Semicolon chaining not supported (outside of { } that is)
 ;; * At least a couple parser issues (max-lisp-eval-depth errors)
 ;; * A big pile of semantic issues that I don't know about yet
 
