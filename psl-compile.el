@@ -25,8 +25,13 @@
 
 ;; * Equality tests are incomplete
 ;; * Semicolon chaining not supported (outside of { } that is)
-;; * At least a couple parser issues (max-lisp-eval-depth errors)
+;; * Environment not quite right: defvar functions can recurse
 ;; * A big pile of semantic issues that I don't know about yet
+
+;;; Planned features:
+
+;; * Support for calling Elisp functions
+;; * Better error handling via evaluation wrapper
 
 ;;; Code:
 
