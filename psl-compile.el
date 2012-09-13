@@ -68,6 +68,16 @@
   (interactive)
   (pp-display-expression (psl-compile-to-elisp) "*Pp Eval Output*"))
 
+(defun psl-batch-eval ()
+  "Run a ParselTongue program from the command line. It would be
+used like this:
+    emacs -Q --batch -l psl-compile.el -f psl-batch-eval script.psl"
+  (setq vc-handled-backends nil)        ; disable spurious messages
+  (with-temp-buffer
+    (insert-file-contents-literally (car (last command-line-args)))
+    (psl-eval-buffer)
+    (psl-print "\n")))
+
 (defun psl-+ (a &rest rest)
   "Implement ParselTongue's + function."
   (if (stringp a)
