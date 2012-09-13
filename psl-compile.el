@@ -82,9 +82,11 @@
 
 (defun psl-print (o)
   "Implement ParselTongue's print function."
-  (typecase o
-    (function (princ "function" t))
-    (list     (princ "object" t))
+  (case o
+    ((eq o t)       (princ "true" t))
+    ((null o)       (princ "false" t))
+    ((functionp o)  (princ "function" t))
+    ((listp o)      (princ "object" t))
     (t (princ o t)))
   o)
 
