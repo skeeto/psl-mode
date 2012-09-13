@@ -107,7 +107,7 @@
     (for       "for" "(" expr ";" expr ";" expr ")" expr)
 
     ;; Identifiers
-    (id      . "[a-zA-Z<>=]+")
+    (id      . "[a-zA-Z]+")
     (ids       id [("," ids) ""])
     (params    "(" [ids ""] ")")
 
