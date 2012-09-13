@@ -51,7 +51,8 @@
         (mpd-skip-whitespace)
         (if (= (point) (point-max))
             sexp
-          (error "parse error"))))))
+          (error (format "parse error at line %d, col %d"
+                         (car mpd-best) (cdr mpd-best))))))))
 
 (defun psl-eval-buffer ()
   "Evaluate the ParselTongue program in the buffer."
@@ -99,7 +100,7 @@
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward "#[^\n]*\n" nil t)
-      (replace-match "" nil nil))))
+      (replace-match "\n" nil nil))))
 
 ;;; ParselTongue grammar
 
@@ -257,12 +258,27 @@
 
 ;;; Parser functions
 
+(defvar mpd-best (cons 0 0)
+  "The furthest most point that parsing reached. This information
+can be used to determine where parsing failed.")
+
+(defun mpd-set-best ()
+  "Update the current best parsing position."
+  (let* ((cline (line-number-at-pos))
+         (ccol (current-column))
+         (pos (cons cline ccol)))
+    (destructuring-bind (line . col) mpd-best
+        (cond
+         ((> cline line) (setq mpd-best pos))
+         ((and (= cline line) (> ccol col)) (setq mpd-best pos))))))
+
 (defun mpd-get-token-func (token funcs)
   "Get the manipulation function for the given token."
   (or (cdr (assq token funcs)) #'cons))
 
 (defun mpd-parse (tokens &optional funcs pattern)
   "Return the next item in the current buffer."
+  (setq mpd-best (cons 0 0))
   (if pattern
       (mpd-match pattern tokens funcs)
     (dolist (token tokens)
@@ -311,6 +327,7 @@
                   (symbol (mpd-match-token pattern tokens funcs))
                   (vector (mpd-match-or    pattern tokens funcs)))))
     (unless result
+      (mpd-set-best)
       (goto-char start))
     result))
 
