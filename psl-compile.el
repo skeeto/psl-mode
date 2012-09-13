@@ -87,7 +87,7 @@
 ;;; ParselTongue grammar
 
 (defvar psl-tokens
-  '((expr      [block defvar deffun number object lambda string
+  '((expr    . [block defvar deffun number object lambda string
                 true false if while for inc-pre inc-post dec-pre dec-post
                 assign + - == < > print funcall index message pexpr id])
     (pexpr     "(" expr ")")
@@ -143,7 +143,7 @@
   "The ParselTongue grammar.")
 
 (defvar psl-token-funcs
-  `((expr     . ,(lambda (token expr) (car expr)))
+  `((expr     . ,(lambda (token expr) expr))
     (pexpr    . ,(lambda (token expr)  (nth 1 expr)))
     (number   . ,(lambda (token num)  (string-to-number num)))
     (id       . ,(lambda (token name) (intern name)))
