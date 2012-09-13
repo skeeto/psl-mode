@@ -25,7 +25,6 @@
 
 ;; * Operators += and -= not yet implemented
 ;; * Equality tests are incomplete
-;; * The empty object is currently (), so it evaluates to false
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * At least a couple parser issues (max-lisp-eval-depth errors)
 ;; * A big pile of semantic issues that I don't know about yet
@@ -80,13 +79,17 @@
   "Implement ParselTongue's == function."
   (equal a b))
 
+(defun psl-object-p (o)
+  "Return t if argument is ParselTongue object."
+  (and (listp o) (eq (car o) 'object)))
+
 (defun psl-print (o)
   "Implement ParselTongue's print function."
   (cond
-    ((eq o t)       (princ "true" t))
-    ((null o)       (princ "false" t))
-    ((functionp o)  (princ "function" t))
-    ((listp o)      (princ "object" t))
+    ((eq o t)          (princ "true" t))
+    ((null o)          (princ "false" t))
+    ((functionp o)     (princ "function" t))
+    ((psl-object-p o)  (princ "object" t))
     (t (princ o t)))
   o)
 
@@ -186,8 +189,8 @@
     (object   . ,(lambda (token obj)
                    (let ((fields (nth 1 obj)))
                      (if (stringp fields)
-                         (list 'list)
-                       (cons 'list fields)))))
+                         '(list (quote object))
+                       `(list 'object ,@fields)))))
     (if       . ,(lambda (token expr)
                    (destructuring-bind (if cond then expra else exprb) expr
                      `(if ,cond ,expra ,exprb))))
@@ -219,7 +222,7 @@
                         (destructuring-bind (obj field) lhs
                           (let ((obj-sym (gensym)))
                             `(let ((,obj-sym (copy-alist ,obj)))
-                               (setcdr (assq ,field ,obj-sym) ,expr)
+                               (setcdr (assq ,field (cdr ,obj-sym)) ,expr)
                                ,obj-sym)))))))
     (+         . ,(lambda (token op) (psl--apply 'psl-+ (nth 1 op))))
     (-         . ,(lambda (token op) (psl--apply 'psl-- (nth 1 op))))
@@ -228,11 +231,11 @@
     (==        . ,(lambda (token op) (psl--apply 'psl-== (nth 1 op))))
     (print     . ,(lambda (token op) (psl--apply 'psl-print (nth 1 op))))
     (index     . ,(lambda (token index)
-                    `(cdr (assq ,(nth 1 index) ,(nth 0 index)))))
+                    `(cdr (assq ,(nth 1 index) (cdr,(nth 0 index))))))
     (index=    . ,(lambda (token index) index))
     (message   . ,(lambda (token msg)
                     (destructuring-bind (obj at f args) msg
-                      `(funcall (cdr (assq ,f ,obj))
+                      `(funcall (cdr (assq ,f (cdr ,obj)))
                                 ,@(psl--apply obj args)))))
     (field     . ,(lambda (token field) `(quote ,field)))
     (index-str . ,(lambda (token index) `(intern ,(nth 1 index))))
