@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(require 'psl-compiler)
+(require 'psl-compile)
 
 (defgroup psl-mode nil
   "Options for editing ParselTongue code."
