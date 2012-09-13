@@ -212,7 +212,7 @@
     (message   . ,(lambda (token msg)
                     (destructuring-bind (obj at f args) msg
                       `(funcall (cdr (assq ,f ,obj))
-                                ,@(psl--apply o args)))))
+                                ,@(psl--apply obj args)))))
     (field     . ,(lambda (token field) `(quote ,field)))
     (index-str . ,(lambda (token index) `(intern ,(nth 1 index))))
     (by-id     . ,(lambda (token id) (cadr id))))
