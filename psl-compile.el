@@ -55,7 +55,8 @@
         (mpd-skip-whitespace)
         (if (= (point) (point-max))
             sexp
-          (error (format "parse error at line %d, col %d"
+          (error (format "%s:%d:%d: Encountered error while parsing"
+                         (buffer-name buffer)
                          (car mpd-best) (cdr mpd-best))))))))
 
 (defun psl-eval-buffer ()
@@ -73,10 +74,12 @@
 used like this:
     emacs -Q --batch -l psl-compile.el -f psl-batch-eval script.psl"
   (setq vc-handled-backends nil)        ; disable spurious messages
-  (with-temp-buffer
-    (insert-file-contents-literally (car (last command-line-args)))
-    (psl-eval-buffer)
-    (psl-print "\n")))
+  (let ((filename (car (last command-line-args))))
+    (with-temp-buffer
+      (insert-file-contents-literally filename)
+      (rename-buffer filename)
+      (psl-eval-buffer)
+      (psl-print "\n"))))
 
 (defun psl-+ (a &rest rest)
   "Implement ParselTongue's + function."
