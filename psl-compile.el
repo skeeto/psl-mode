@@ -47,7 +47,7 @@
       (let ((sexp
              (let ((max-lisp-eval-depth
                     (floor (* psl-stack-multiplier max-lisp-eval-depth))))
-               (mpd-match 'expr psl-tokens psl-token-funcs))))
+               (mpd-parse psl-tokens psl-token-funcs 'expr))))
         (mpd-skip-whitespace)
         (if (= (point) (point-max))
             sexp
@@ -261,11 +261,13 @@
   "Get the manipulation function for the given token."
   (or (cdr (assq token funcs)) #'cons))
 
-(defun mpd-parse (tokens &optional funcs)
+(defun mpd-parse (tokens &optional funcs pattern)
   "Return the next item in the current buffer."
-  (dolist (token tokens)
-    (let ((result (mpd-match (car token) tokens funcs)))
-      (if result (return result)))))
+  (if pattern
+      (mpd-match pattern tokens funcs)
+    (dolist (token tokens)
+      (let ((result (mpd-match (car token) tokens funcs)))
+        (if result (return result))))))
 
 (defun mpd-match-list (list tokens funcs)
   "Match all patterns in a list."
