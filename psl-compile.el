@@ -24,7 +24,6 @@
 ;;; Known bugs:
 
 ;; * Assignment is an issue right now
-;;   * Objects are mutable (object assignment semantics are wrong)
 ;;   * Operators += and -= not yet implemented
 ;; * Equality tests are incomplete
 ;; * The empty object is currently (), so it evaluates to false
@@ -142,13 +141,14 @@
     (inc-post  id "++")
     (dec-pre   "--" id)
     (dec-post  id "--")
-    (assign    [index id] "=" expr)
+    (assign    [index= id] "=" expr)
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
     (pair      id ":" expr)
     (object    "{" [pairs ""] "}")
     (index     [pexpr id] [by-id index-str])
+    (index=    [pexpr id] [by-id index-str])
     (message   [pexpr id] "@" [index-str field] args)
     (by-id     "\\." field)
     (field   . id)
@@ -212,7 +212,13 @@
                       `(prog1 ,id (setq ,id (1- ,id))))))
     (assign    . ,(lambda (token assign)
                     (destructuring-bind (lhs eq expr) assign
-                      `(setf ,lhs ,expr))))
+                      (if (symbolp lhs)
+                          `(setq ,lhs ,expr)
+                        (destructuring-bind (obj field) lhs
+                          (let ((obj-sym (gensym)))
+                            `(let ((,obj-sym (copy-alist ,obj)))
+                               (setcdr (assq ,field ,obj-sym) ,expr)
+                               ,obj-sym)))))))
     (+         . ,(lambda (token op) (psl--apply 'psl-+ (nth 1 op))))
     (-         . ,(lambda (token op) (psl--apply 'psl-- (nth 1 op))))
     (<         . ,(lambda (token op) (psl--apply '< (nth 1 op))))
@@ -220,8 +226,8 @@
     (==        . ,(lambda (token op) (psl--apply 'psl-== (nth 1 op))))
     (print     . ,(lambda (token op) (psl--apply 'psl-print (nth 1 op))))
     (index     . ,(lambda (token index)
-                    (let ((obj (nth 0 index)))
-                      `(cdr (assq ,(nth 1 index) ,obj)))))
+                    `(cdr (assq ,(nth 1 index) ,(nth 0 index)))))
+    (index=    . ,(lambda (token index) index))
     (message   . ,(lambda (token msg)
                     (destructuring-bind (obj at f args) msg
                       `(funcall (cdr (assq ,f ,obj))
