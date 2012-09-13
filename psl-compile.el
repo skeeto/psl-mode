@@ -23,7 +23,6 @@
 
 ;;; Known bugs:
 
-;; * Operators += and -= not yet implemented
 ;; * Equality tests are incomplete
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * At least a couple parser issues (max-lisp-eval-depth errors)
@@ -105,9 +104,9 @@
 ;;; ParselTongue grammar
 
 (defvar psl-tokens
-  '((expr    . [block defvar deffun number object lambda string
-                true false if while for inc-pre inc-post dec-pre dec-post
-                assign + - == < > print funcall index message pexpr id])
+  '((expr    . [block defvar deffun number object lambda string true false
+                if while for assign assignm inc-pre inc-post dec-pre dec-post
+                + - == < > print funcall index message pexpr id])
     (pexpr     "(" expr ")")
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
@@ -148,6 +147,7 @@
     (dec-pre   "--" id)
     (dec-post  id "--")
     (assign    [index= id] "=" expr)
+    (assignm   [index= id] "[+-]=" expr)
 
     ;; Objects
     (pairs     pair [("," pairs) ""])
@@ -225,6 +225,18 @@
                             `(let ((,obj-sym (copy-alist ,obj)))
                                (setcdr (assq ,field (cdr ,obj-sym)) ,expr)
                                ,obj-sym)))))))
+    (assignm   . ,(lambda (token assign)
+                    (destructuring-bind (lhs opstr expr) assign
+                      (let ((op (if (equal opstr "+=") '+ '-)))
+                        (if (symbolp lhs)
+                            `(setq ,lhs (,op ,lhs ,expr))
+                          (destructuring-bind (obj field) lhs
+                            (let ((obj-sym (gensym)))
+                              `(let ((,obj-sym (copy-alist ,obj)))
+                                 (setcdr (assq ,field (cdr ,obj-sym))
+                                         (,op (cdr (assq ,field (cdr ,obj-sym)))
+                                              ,expr))
+                                 ,obj-sym))))))))
     (+         . ,(lambda (token op) (psl--apply 'psl-+ (nth 1 op))))
     (-         . ,(lambda (token op) (psl--apply 'psl-- (nth 1 op))))
     (<         . ,(lambda (token op) (psl--apply '< (nth 1 op))))
