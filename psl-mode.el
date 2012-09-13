@@ -15,12 +15,16 @@
 ;; The indentation size can be set with `psl-indent-width'.
 
 ;; After setting up `psl-program-name' the current buffer can be run
-;; by the interpreter with C-c C-r (`psl-run-buffer').
+;; by the interpreter with C-c C-r (`psl-run-buffer'). Alternatively,
+;; the code can be evaluated within Emacs itself with a built-in
+;; ParselTongue compiler with C-c C-e (`psl-eval-buffer').
 
 ;; The ParselTongue specification:
 ;;  http://www.cs.brown.edu/courses/cs173/2012/Assignments/ParselTest/spec.html
 
 ;;; Code:
+
+(require 'psl-compiler)
 
 (defgroup psl-mode nil
   "Options for editing ParselTongue code."
@@ -42,6 +46,7 @@ argument."
 (defvar psl-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-r") 'psl-run-buffer)
+    (define-key map (kbd "C-c C-e") 'psl-eval-buffer)
     map)
   "Keymap for ParselTongue mode.")
 
