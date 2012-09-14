@@ -91,17 +91,19 @@ used like this:
 
 ;;; ParselTongue environment
 
-(defun psl-+ (a &rest rest)
+(defun psl-+ (&rest args)
   "Implement ParselTongue's + function."
-  (if (stringp a)
-      (apply #'concat (cons a rest))
-    (apply #'+ (cons a rest))))
+  (cond ((null args) (error "Empty list for prim op"))
+        ((not (memq nil (mapcar #'stringp args))) (apply #'concat args))
+        ((not (memq nil (mapcar #'numberp args))) (apply #'+ args))
+        (t (error "Bad arguments to +"))))
 
-(defun psl-- (a &rest rest)
+(defun psl-- (&rest args)
   "Implement ParselTongue's - function."
-  (if (null rest)
-      a
-    (apply #'- (cons a rest))))
+  (cond ((null args) (error "Empty list for prim op"))
+        ((not (memq nil (mapcar #'numberp args)))
+         (if (= 1 (length args)) (car args) (apply #'- args)))
+        (t (error "Bad arguments to -"))))
 
 (defun psl-== (a b)
   "Implement ParselTongue's == function."
