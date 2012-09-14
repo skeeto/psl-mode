@@ -79,29 +79,31 @@ argument."
     st)
   "Syntax table for ParselTongue mode.")
 
+(defvar psl-indent-tokens '(block defvar deffun if)
+  "Parser tokens that cause indentation.")
+
+(defun psl-count-indent (stack)
+  "Compute the indentation level from the token stack."
+  (apply #'+ (mapcar (lambda (s) (if (member s psl-indent-tokens) 4 0)) stack)))
+
+(defun psl-indent-line-to (n)
+  "Indent the current line, maintaining cursor position like
+other modes do."
+  (let ((col (current-column))
+        (indent (current-indentation)))
+    (if (<= col indent)
+        (indent-line-to n)
+      (indent-line-to n)
+      (forward-char (- col indent)))))
+
 (defun psl-indent-line ()
   "Indent current line as ParselTongue code."
   (interactive)
-  (beginning-of-line)
-  (if (bobp)
-      (indent-line-to 0)
-    (let (cur-indent)
-      (if (looking-at "^[ \t]*\\(?:}\\|in\\)")
-          (save-excursion
-            (forward-line -1)
-            (setq cur-indent (- (current-indentation) psl-indent-width)))
-        (save-excursion
-          (while (not cur-indent)
-            (forward-line -1)
-            (cond
-             ((looking-at "^[ \t]*}")
-              (setq cur-indent (current-indentation)))
-             ((looking-at "\\(^[^#\n{]*}[^{]*$\\)")
-              (setq cur-indent (- (current-indentation) psl-indent-width)))
-             ((looking-at "\\(^[^#\n}]*\\(?:{\\|deffun\\|defvar\\)[^}]*$\\)")
-              (setq cur-indent (+ (current-indentation) psl-indent-width)))
-             ((bobp) (setq cur-indent (current-indentation)))))))
-      (indent-line-to (max 0 (or cur-indent 0))))))
+  (psl-compile-to-elisp)
+  (psl-indent-line-to (psl-count-indent mpd-point-stack))
+  (princ mpd-point-stack t))
+
+(psl-count-indent '(defvar expr if expr))
 
 ;;;###autoload
 (define-derived-mode psl-mode prog-mode "Parsel"
