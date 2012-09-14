@@ -26,7 +26,9 @@
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * Loops return the wrong value
 ;; * No "Multiply-defined fields" check
-;; * No check for "Field no found"
+;; * No check for "Field not found"
+;; * Probably some evaluation order mistakes
+;; * Object equality broken again.
 ;; * Environment not quite right: defvar functions can recurse
 
 ;;; Planned features:
