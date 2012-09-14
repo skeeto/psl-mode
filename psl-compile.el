@@ -26,7 +26,6 @@
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * Loops return the wrong value
 ;; * Probably some evaluation order mistakes
-;; * Object equality broken again.
 ;; * Environment not quite right: defvar functions can recurse
 
 ;;; Planned features:
@@ -111,10 +110,14 @@ used like this:
 
 (defun psl-== (a b)
   "Implement ParselTongue's == function."
-  (labels ((pair< (a b) (string< (symbol-name (car a)) (symbol-name (car b)))))
+  (labels ((pair< (a b) (string< (symbol-name (car a)) (symbol-name (car b))))
+           (clean (a) (unless (null a)
+                        (cons (car a) (clean (if (eq (caar a) (caadr a))
+                                                 (cddr a)
+                                               (cdr a)))))))
     (cond
      ((and (psl-object-p a) (psl-object-p b))
-      (equal (sort (cdr a) #'pair<) (sort (cdr b) #'pair<)))
+      (equal (clean (sort (cdr a) #'pair<)) (clean (sort (cdr b) #'pair<))))
      (t (equal a b)))))
 
 (defun psl-< (&rest args)
