@@ -99,7 +99,9 @@ other modes do."
 (defun psl-indent-line ()
   "Indent current line as ParselTongue code."
   (interactive)
-  (psl-compile-to-elisp)
+  (condition-case err
+      (psl-compile-to-elisp)
+    (error nil))
   (psl-indent-line-to (psl-count-indent mpd-point-stack))
   (princ mpd-point-stack t))
 
