@@ -119,14 +119,15 @@ used like this:
   "Return t if argument is ParselTongue object."
   (and (listp o) (eq (car o) 'object)))
 
-(defun psl-print (o)
+(defun psl-print (o &rest rest)
   "Implement ParselTongue's print function."
   (cond
-    ((eq o t)          (princ "true" t))
-    ((null o)          (princ "false" t))
-    ((functionp o)     (princ "function" t))
-    ((psl-object-p o)  (princ "object" t))
-    (t (princ o t)))
+   (rest              (error "Bad primop"))
+   ((eq o t)          (princ "true" t))
+   ((null o)          (princ "false" t))
+   ((functionp o)     (princ "function" t))
+   ((psl-object-p o)  (princ "object" t))
+   (t (princ o t)))
   o)
 
 (defun psl-remove-comments ()
