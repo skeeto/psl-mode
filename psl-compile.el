@@ -115,19 +115,43 @@ used like this:
       (equal (sort (cdr a) #'pair<) (sort (cdr b) #'pair<)))
      (t (equal a b)))))
 
+(defun psl-< (&rest args)
+  "Implement ParselTongue's < functions."
+  (if (not (= 2 (length args)))
+      (error "Bad primop")
+    (destructuring-bind (a b) args
+      (if (and (numberp a) (numberp b))
+          (< a b)
+        (error (format "Bad arguments for <:\n%s\n%s"
+                       (psl-print-to-string a) (psl-print-to-string b)))))))
+
+(defun psl-> (&rest args)
+  "Implement ParselTongue's > functions."
+  (if (not (= 2 (length args)))
+      (error "Bad primop")
+    (destructuring-bind (a b) args
+      (if (and (numberp a) (numberp b))
+          (> a b)
+        (error (format "Bad arguments for >:\n%s\n%s"
+                       (psl-print-to-string a) (psl-print-to-string b)))))))
+
 (defun psl-object-p (o)
   "Return t if argument is ParselTongue object."
   (and (listp o) (eq (car o) 'object)))
 
+(defun psl-print-to-string (o)
+  "Print a ParselTongue value to a string."
+  (cond ((eq o t)          "true")
+        ((null o)          "false")
+        ((functionp o)     "function")
+        ((psl-object-p o)  "object")
+        (t (format "%s" o))))
+
 (defun psl-print (o &rest rest)
   "Implement ParselTongue's print function."
-  (cond
-   (rest              (error "Bad primop"))
-   ((eq o t)          (princ "true" t))
-   ((null o)          (princ "false" t))
-   ((functionp o)     (princ "function" t))
-   ((psl-object-p o)  (princ "object" t))
-   (t (princ o t)))
+  (if rest
+      (error "Bad primop")
+    (princ (psl-print-to-string o) t))
   o)
 
 (defun psl-remove-comments ()
@@ -276,8 +300,8 @@ used like this:
                                  ,obj-sym))))))))
     (+         . ,(lambda (token op) (psl--apply 'psl-+ (nth 1 op))))
     (-         . ,(lambda (token op) (psl--apply 'psl-- (nth 1 op))))
-    (<         . ,(lambda (token op) (psl--apply '< (nth 1 op))))
-    (>         . ,(lambda (token op) (psl--apply '> (nth 1 op))))
+    (<         . ,(lambda (token op) (psl--apply 'psl-< (nth 1 op))))
+    (>         . ,(lambda (token op) (psl--apply 'psl-> (nth 1 op))))
     (==        . ,(lambda (token op) (psl--apply 'psl-== (nth 1 op))))
     (print     . ,(lambda (token op) (psl--apply 'psl-print (nth 1 op))))
     (index     . ,(lambda (token index)
