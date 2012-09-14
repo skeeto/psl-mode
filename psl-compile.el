@@ -59,10 +59,18 @@
                          (buffer-name buffer)
                          (car mpd-best) (cdr mpd-best))))))))
 
+(defun psl-eval-wrapper (sexp)
+  "Evaluate a compiled ParselTongue program inside a wrapper that
+handles errors properly."
+  (condition-case err
+      (psl-print (eval sexp))
+    (wrong-number-of-arguments
+     (error "Application failed with arity mismatch"))))
+
 (defun psl-eval-buffer ()
   "Evaluate the ParselTongue program in the buffer."
   (interactive)
-  (psl-print (eval (psl-compile-to-elisp))))
+  (psl-eval-wrapper (psl-compile-to-elisp)))
 
 (defun psl-show-elisp-compilation ()
   "Show the Emacs Lisp compilation in a buffer."
@@ -80,6 +88,8 @@ used like this:
       (rename-buffer filename)
       (psl-eval-buffer)
       (psl-print "\n"))))
+
+;;; ParselTongue environment
 
 (defun psl-+ (a &rest rest)
   "Implement ParselTongue's + function."
