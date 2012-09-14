@@ -23,15 +23,17 @@
 
 ;;; Known bugs:
 
-;; * Equality tests are incomplete
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * Environment not quite right: defvar functions can recurse
-;; * A big pile of semantic issues that I don't know about yet
+;; * Some semantic issues that I don't know about yet
 
 ;;; Planned features:
 
 ;; * Support for calling Elisp functions
-;; * Better error handling via evaluation wrapper
+
+;;; Won't fix:
+
+;; * Function equality is fundamentally broken
 
 ;;; Code:
 
