@@ -25,7 +25,6 @@
 
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * Loops return the wrong value
-;; * No "Multiply-defined fields" check
 ;; * Probably some evaluation order mistakes
 ;; * Object equality broken again.
 ;; * Environment not quite right: defvar functions can recurse
@@ -248,14 +247,16 @@ used like this:
     (block    . ,(lambda (token exprs) (cons 'progn (nth 1 exprs))))
     (true     . ,(lambda (token true) t))
     (false    . ,(lambda (token false) '(not t))) ; can't return nil
-    (pair     . ,(lambda (token pair)
-                   `(cons (quote ,(nth 0 pair)) ,(nth 2 pair))))
-    (pairs    . ,#'psl--tuck)
+    (pair     . ,(lambda (token pair) (cons (nth 0 pair) (nth 2 pair))))
+    (pairs    . ,(lambda (token pairs)
+                   (if (stringp (nth 1 pairs))
+                       (list (car pairs))
+                     (cons (car pairs) (cadadr pairs)))))
     (object   . ,(lambda (token obj)
                    (let ((fields (nth 1 obj)))
                      (if (stringp fields)
                          '(list (quote object))
-                       `(list 'object ,@fields)))))
+                       `(list 'object ,@(psl-make-object fields))))))
     (if       . ,(lambda (token expr)
                    (destructuring-bind (if cond then expra else exprb) expr
                      `(if ,cond ,expra ,exprb))))
@@ -328,6 +329,14 @@ used like this:
   (if (stringp (nth 1 names))
       (list (car names))
     (cons (car names) (cadadr names))))
+
+(defun psl-make-object (fields)
+  (if (null fields)
+      ()
+    (if (assq (caar fields) (cdr fields))
+        '((error "Multiply-defined fields"))
+      (cons `(cons (quote ,(caar fields)) ,(cdar fields))
+            (psl-make-object (cdr fields))))))
 
 ;;; Parser functions
 
