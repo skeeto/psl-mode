@@ -107,7 +107,11 @@ used like this:
 
 (defun psl-== (a b)
   "Implement ParselTongue's == function."
-  (equal a b))
+  (labels ((pair< (a b) (string< (symbol-name (car a)) (symbol-name (car b)))))
+    (cond
+     ((and (psl-object-p a) (psl-object-p b))
+      (equal (sort (cdr a) #'pair<) (sort (cdr b) #'pair<)))
+     (t (equal a b)))))
 
 (defun psl-object-p (o)
   "Return t if argument is ParselTongue object."
