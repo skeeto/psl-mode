@@ -27,6 +27,7 @@
 ;; * Assigning new fields doesn't work
 ;; * Loops return the wrong value
 ;; * No "Multiply-defined fields" check
+;; * No check for "Field no found"
 ;; * Environment not quite right: defvar functions can recurse
 
 ;;; Planned features:
