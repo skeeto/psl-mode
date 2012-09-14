@@ -24,7 +24,6 @@
 ;;; Known bugs:
 
 ;; * Semicolon chaining not supported (outside of { } that is)
-;; * Assigning new fields doesn't work
 ;; * Loops return the wrong value
 ;; * No "Multiply-defined fields" check
 ;; * No check for "Field no found"
@@ -285,22 +284,17 @@ used like this:
                       (if (symbolp lhs)
                           `(setq ,lhs ,expr)
                         (destructuring-bind (obj field) lhs
-                          (let ((obj-sym (make-symbol "obj")))
-                            `(let ((,obj-sym (copy-alist ,obj)))
-                               (setcdr (assq ,field (cdr ,obj-sym)) ,expr)
-                               ,obj-sym)))))))
+                          `(cons 'object (acons ,field ,expr (cdr ,obj))))))))
     (assignm   . ,(lambda (token assign)
                     (destructuring-bind (lhs opstr expr) assign
                       (let ((op (if (equal opstr "+=") '+ '-)))
                         (if (symbolp lhs)
                             `(setq ,lhs (,op ,lhs ,expr))
                           (destructuring-bind (obj field) lhs
-                            (let ((obj-sym (make-symbol "obj")))
-                              `(let ((,obj-sym (copy-alist ,obj)))
-                                 (setcdr (assq ,field (cdr ,obj-sym))
-                                         (,op (cdr (assq ,field (cdr ,obj-sym)))
-                                              ,expr))
-                                 ,obj-sym))))))))
+                            `(cons 'object
+                                   (acons ,field
+                                          (,op (cdr (assq ,field (cdr ,obj)))
+                                               ,expr) ,obj))))))))
     (+         . ,(lambda (token op) (psl--apply 'psl-+ (nth 1 op))))
     (-         . ,(lambda (token op) (psl--apply 'psl-- (nth 1 op))))
     (<         . ,(lambda (token op) (psl--apply 'psl-< (nth 1 op))))
