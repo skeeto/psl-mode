@@ -26,7 +26,6 @@
 ;; * Semicolon chaining not supported (outside of { } that is)
 ;; * Loops return the wrong value
 ;; * No "Multiply-defined fields" check
-;; * No check for "Field not found"
 ;; * Probably some evaluation order mistakes
 ;; * Object equality broken again.
 ;; * Environment not quite right: defvar functions can recurse
@@ -294,9 +293,10 @@ used like this:
                             `(setq ,lhs (,op ,lhs ,expr))
                           (destructuring-bind (obj field) lhs
                             `(cons 'object
-                                   (acons ,field
-                                          (,op (cdr (assq ,field (cdr ,obj)))
-                                               ,expr) ,obj))))))))
+                              (acons ,field
+                               (,op (cdr (or (assq ,field (cdr ,obj))
+                                         (error "Field not found: %s" ,field)))
+                                    ,expr) ,obj))))))))
     (+         . ,(lambda (token op) (psl--apply 'psl-+ (nth 1 op))))
     (-         . ,(lambda (token op) (psl--apply 'psl-- (nth 1 op))))
     (<         . ,(lambda (token op) (psl--apply 'psl-< (nth 1 op))))
@@ -304,7 +304,8 @@ used like this:
     (==        . ,(lambda (token op) (psl--apply 'psl-== (nth 1 op))))
     (print     . ,(lambda (token op) (psl--apply 'psl-print (nth 1 op))))
     (index     . ,(lambda (token index)
-                    `(cdr (assq ,(nth 1 index) (cdr,(nth 0 index))))))
+                    `(cdr (or (assq ,(nth 1 index) (cdr,(nth 0 index)))
+                              (error "Field not found: %s" ,(nth 1 index))))))
     (index=    . ,(lambda (token index) index))
     (message   . ,(lambda (token msg)
                     (destructuring-bind (obj at f args) msg
