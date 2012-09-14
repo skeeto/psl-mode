@@ -24,8 +24,10 @@
 ;;; Known bugs:
 
 ;; * Semicolon chaining not supported (outside of { } that is)
+;; * Assigning new fields doesn't work
+;; * Loops return the wrong value
+;; * No "Multiply-defined fields" check
 ;; * Environment not quite right: defvar functions can recurse
-;; * Some semantic issues that I don't know about yet
 
 ;;; Planned features:
 
