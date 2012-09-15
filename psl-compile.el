@@ -167,7 +167,9 @@ used like this:
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward "#[^\n]*\n" nil t)
-      (replace-match "\n" nil nil))))
+      (replace-match
+       (concat (make-string (- (match-end 0) (match-beginning 0) 1) ? ) "\n")
+       nil nil))))
 
 ;;; ParselTongue grammar
 
