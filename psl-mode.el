@@ -79,14 +79,18 @@ argument."
     st)
   "Syntax table for ParselTongue mode.")
 
-(defvar psl-indent-tokens '(defvar deffun then else while for)
+(defvar psl-indent-tokens '(defvar deffun then else while for object)
   "Parser tokens that cause indentation.")
 
 (defun psl-count-indent (stack)
   "Compute the indentation level from the token stack."
-  (apply #'+ (mapcar (lambda (s)
-                       (if (member s psl-indent-tokens) psl-indent-width 0))
-                     stack)))
+  (cond ((null stack) 0)
+        ((eq (car stack) 'block)
+         (+ (if (member (cadr stack) psl-indent-tokens) 0 1)
+            (psl-count-indent (cdr stack))))
+        ((member (car stack) psl-indent-tokens)
+         (+ 1 (psl-count-indent (cdr stack))))
+        (t (psl-count-indent (cdr stack)))))
 
 (defun psl-indent-line-to (n)
   "Indent the current line, maintaining cursor position like
@@ -104,7 +108,11 @@ other modes do."
   (condition-case err
       (psl-compile-to-elisp)
     (error nil))
-  (psl-indent-line-to (psl-count-indent mpd-point-stack))
+  (let ((indent (psl-count-indent (delete 'expr (reverse mpd-point-stack)))))
+    (save-excursion
+      (back-to-indentation)
+      (if (looking-at "}[[:space:];]*$") (setq indent (1- indent))))
+    (psl-indent-line-to (max 0 (* psl-indent-width indent))))
   (princ mpd-point-stack t))
 
 (psl-count-indent '(defvar expr if expr))
