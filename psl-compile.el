@@ -62,7 +62,9 @@
             sexp
           (error (format "%s:%d:%d: Encountered error while parsing"
                          (buffer-name buffer)
-                         (line-number-at-pos mpd-best))))))))
+                         (line-number-at-pos mpd-best)
+                         (save-excursion (goto-char mpd-best)
+                                         (current-column)))))))))
 
 (defun psl-eval-wrapper (sexp)
   "Evaluate a compiled ParselTongue program inside a wrapper that
