@@ -79,7 +79,7 @@ argument."
     st)
   "Syntax table for ParselTongue mode.")
 
-(defvar psl-indent-tokens '(block defvar deffun if)
+(defvar psl-indent-tokens '(defvar deffun then else while for)
   "Parser tokens that cause indentation.")
 
 (defun psl-count-indent (stack)
