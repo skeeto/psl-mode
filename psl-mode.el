@@ -111,7 +111,7 @@ other modes do."
   (let ((indent (psl-count-indent (delete 'expr (reverse mpd-point-stack)))))
     (save-excursion
       (back-to-indentation)
-      (if (looking-at "}[[:space:];]*$") (setq indent (1- indent))))
+      (if (looking-at "}") (setq indent (1- indent))))
     (psl-indent-line-to (max 0 (* psl-indent-width indent))))
   (princ mpd-point-stack t))
 
