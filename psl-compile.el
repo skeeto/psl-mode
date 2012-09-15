@@ -47,7 +47,7 @@
 (defun psl-compile-to-elisp ()
   "Compile the current buffer into an Emacs Lisp s-expression."
   (let ((buffer (current-buffer)))
-    (setq mpd-start (point2 nil 0))
+    (setq mpd-start (save-excursion (beginning-of-line) (point)))
     (setq mpd-point-stack ())
     (with-temp-buffer
       (insert-buffer-substring buffer) ; lose the text properties
@@ -62,7 +62,7 @@
             sexp
           (error (format "%s:%d:%d: Encountered error while parsing"
                          (buffer-name buffer)
-                         (point2-line mpd-best) (point2-col mpd-best))))))))
+                         (line-number-at-pos mpd-best))))))))
 
 (defun psl-eval-wrapper (sexp)
   "Evaluate a compiled ParselTongue program inside a wrapper that
@@ -343,32 +343,13 @@ used like this:
       (cons `(cons (quote ,(caar fields)) ,(cdar fields))
             (psl-make-object (cdr fields))))))
 
-;;; Small point library
-
-(defun point2 (&optional line col)
-  "Return the current 2D point position."
-  (cons (or line (line-number-at-pos)) (or col (current-column))))
-
-(defun point2< (p1 p2)
-  "Return t if P1 occurs before P2."
-  (or (< (car p1) (car p2))
-      (and (= (car p1) (car p2)) (< (cdr p1) (cdr p2)))))
-
-(defun point2> (p1 p2)
-  "Return t if P1 occurs after P2."
-  (or (> (car p1) (car p2))
-      (and (= (car p1) (car p2)) (> (cdr p1) (cdr p2)))))
-
-(defalias 'point2-line 'car)
-(defalias 'point2-col 'cdr)
-
 ;;; Parser functions
 
-(defvar mpd-best (point2 0 0)
+(defvar mpd-best 0
   "The furthest most point that parsing reached. This information
 can be used to determine where parsing failed.")
 
-(defvar mpd-start (point2 0 0)
+(defvar mpd-start 0
   "Position of point in original source buffer. The purpose is
 for auto-indentation.")
 
@@ -379,18 +360,13 @@ auto-indentation.")
 (defvar mpd-token-stack ()
   "Stack of tokens at this point.")
 
-(defun mpd-set-best ()
-  "Update the current best parsing position."
-  (if (point2> (point2) mpd-best)
-      (setq mpd-best (point2))))
-
 (defun mpd-get-token-func (token funcs)
   "Get the manipulation function for the given token."
   (or (cdr (assq token funcs)) #'cons))
 
 (defun mpd-parse (tokens &optional funcs pattern)
   "Return the next item in the current buffer."
-  (setq mpd-best (point2 0 0))
+  (setq mpd-best 0)
   (setq mpd-token-stack ())
   (if pattern
       (mpd-match pattern tokens funcs)
@@ -436,18 +412,17 @@ auto-indentation.")
   "Match the given pattern object of any type (toplevel)."
   (mpd-skip-whitespace)
   (let ((start (point))
-        (start2 (point2))
         (result (etypecase pattern
                   (string (mpd-match-regex pattern tokens funcs))
                   (list   (mpd-match-list  pattern tokens funcs))
                   (symbol (mpd-match-token pattern tokens funcs))
                   (vector (mpd-match-or    pattern tokens funcs)))))
     (when (and (not mpd-point-stack)
-               (point2> mpd-start start2)
-               (point2> (point2) mpd-start))
+               (> mpd-start start)
+               (> (point) mpd-start))
       (setq mpd-point-stack (reverse mpd-token-stack)))
     (unless result
-      (mpd-set-best)
+      (setq mpd-best (max mpd-best (point)))
       (goto-char start))
     result))
 
