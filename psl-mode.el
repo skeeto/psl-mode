@@ -84,7 +84,9 @@ argument."
 
 (defun psl-count-indent (stack)
   "Compute the indentation level from the token stack."
-  (apply #'+ (mapcar (lambda (s) (if (member s psl-indent-tokens) 4 0)) stack)))
+  (apply #'+ (mapcar (lambda (s)
+                       (if (member s psl-indent-tokens) psl-indent-width 0))
+                     stack)))
 
 (defun psl-indent-line-to (n)
   "Indent the current line, maintaining cursor position like
