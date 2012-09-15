@@ -191,7 +191,9 @@ used like this:
     (exprs     expr [(";" exprs) ""])
 
     ;; Control structures
-    (if        "if" expr "then" expr "else" expr)
+    (if        "if" expr then else)
+    (then      "then" expr)
+    (else      "else" expr)
     (while     "while" expr expr)
     (for       "for" "(" expr ";" expr ";" expr ")" expr)
 
@@ -267,8 +269,10 @@ used like this:
                          '(list (quote object))
                        `(list 'object ,@(psl-make-object fields))))))
     (if       . ,(lambda (token expr)
-                   (destructuring-bind (if cond then expra else exprb) expr
-                     `(if ,cond ,expra ,exprb))))
+                   (destructuring-bind (if cond then else) expr
+                     `(if ,cond ,then ,else))))
+    (then     . ,(lambda (token expr) (cadr expr)))
+    (else     . ,(lambda (token expr) (cadr expr)))
     (while    . ,(lambda (token expr)
                    (destructuring-bind (while cond body) expr
                      `(while ,cond ,body))))
