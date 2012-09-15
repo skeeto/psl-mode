@@ -2,7 +2,7 @@
 
 It looks like this,
 
-![](http://i.imgur.com/HFlR2.png)
+![](http://i.imgur.com/BXXE8.png)
 
 Automatic indentation is mostly supported.
 
