@@ -368,6 +368,14 @@ auto-indentation.")
 (defvar mpd-token-stack ()
   "Stack of tokens at this point.")
 
+(defun mpd-box (value)
+  "Box a parse return value, allowing nil to be a valid return."
+  (vector value))
+
+(defun mpd-unbox (box)
+  "Unbox a parse return value."
+  (aref box 0))
+
 (defun mpd-get-token-func (token funcs)
   "Get the manipulation function for the given token."
   (cdr (assq token funcs)))
@@ -377,25 +385,25 @@ auto-indentation.")
   (setq mpd-best 0)
   (setq mpd-token-stack ())
   (if pattern
-      (mpd-match pattern tokens funcs)
+      (mpd-unbox (mpd-match pattern tokens funcs))
     (dolist (token tokens)
       (let ((result (mpd-match (car token) tokens funcs)))
-        (if result (return result))))))
+        (if result (return (mpd-unbox result)))))))
 
 (defun mpd-match-list (list tokens funcs)
   "Match all patterns in a list."
   (let ((result (mpd-match (car list) tokens funcs)))
     (when result
       (if (null (cdr list))
-          (list result)
+          (mpd-box (list (mpd-unbox result)))
         (let ((rest (mpd-match-list (cdr list) tokens funcs)))
           (when rest
-            (cons result rest)))))))
+            (mpd-box (cons (mpd-unbox result) (mpd-unbox rest)))))))))
 
 (defun mpd-match-regex (regex tokens funcs)
   "Match a regex."
   (when (looking-at regex)
-    (prog1 (buffer-substring-no-properties (point) (match-end 0))
+    (prog1 (mpd-box (buffer-substring-no-properties (point) (match-end 0)))
       (goto-char (match-end 0)))))
 
 (defun mpd-match-token (token tokens funcs)
@@ -406,9 +414,9 @@ auto-indentation.")
     (pop mpd-token-stack)
     (when match
       (let ((macro (mpd-get-token-func token funcs)))
-        (if macro
-            (funcall macro match)
-          (cons token match))))))
+        (mpd-box (if macro
+                     (funcall macro (mpd-unbox match))
+                   (cons token (mpd-unbox match))))))))
 
 (defun mpd-match-or (vec tokens funcs)
   "Match at least one pattern in the vector."
