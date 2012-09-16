@@ -392,6 +392,13 @@ auto-indentation.")
       (let ((result (mpd-match (car token) tokens funcs)))
         (if result (return (mpd-unbox result)))))))
 
+(defun mpd-parse-string (string tokens &optional funcs pattern)
+  "Like `mpd-parse' but operates on a string."
+  (with-temp-buffer
+    (insert string)
+    (goto-char (point-min))
+    (mpd-parse tokens funcs pattern)))
+
 (defun mpd-match-list (list tokens funcs)
   "Match all patterns in a list."
   (let ((result (mpd-match (car list) tokens funcs)))
