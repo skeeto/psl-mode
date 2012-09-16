@@ -69,6 +69,7 @@
 (defun psl-eval-wrapper (sexp)
   "Evaluate a compiled ParselTongue program inside a wrapper that
 handles errors properly."
+  (require 'cl)
   (condition-case err
       (psl-print (eval sexp))
     (wrong-number-of-arguments
@@ -252,7 +253,7 @@ used like this:
                         ,body))))
     (defvar   . ,(lambda (list)
                    (destructuring-bind (defvar id eq expr in body) list
-                     `(let ((,id ,expr)) ,body))))
+                     `(lexical-let ((,id ,expr)) ,body))))
     (string   . ,#'read)
     (params   . ,(apply-partially 'nth 1))
     (args     . ,(apply-partially 'nth 1))
