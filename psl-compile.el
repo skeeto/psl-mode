@@ -203,7 +203,7 @@ used like this:
     (for       "for" "(" expr ";" expr ";" expr ")" expr)
 
     ;; Identifiers
-    (id      . "[a-zA-Z]+")
+    (id      . "[a-zA-Z][a-zA-Z0-9]*")
     (ids       id [("," ids) empty])
     (params    "(" [ids empty] ")")
 
