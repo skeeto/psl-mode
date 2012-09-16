@@ -8,11 +8,7 @@
 
 ;;; Commentary:
 
-;; Automatic indentation is a little flaky. It assumes the coding
-;; style is going to be fairly reasonable. Currently, multiline if
-;; statements won't indent properly without curly brackets.
-
-;; The indentation size can be set with `psl-indent-width'.
+;; The automatic indentation size can be set with `psl-indent-width'.
 
 ;; After setting up `psl-program-name' the current buffer can be run
 ;; by the interpreter with C-c C-r (`psl-run-buffer'). Alternatively,
