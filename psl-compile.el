@@ -192,8 +192,9 @@ used like this:
                 + - == < > print funcall index message pexpr id])
     (empty   . "")
     (pexpr     "(" expr ")")
-    (defvar    "defvar" id "=" expr "in" expr)
-    (deffun    "deffun" id params expr "in" expr)
+    (defvar    "defvar" id "=" expr in)
+    (deffun    "deffun" id params expr in)
+    (in        "in" expr)
     (lambda    "lambda" params expr)
     (true      "true")
     (false     "false")
@@ -254,12 +255,13 @@ used like this:
     (number   . ,#'string-to-number)
     (id       . ,#'intern)
     (deffun   . ,(lambda (list)
-                   (destructuring-bind (deffun id params expr in body) list
+                   (destructuring-bind (deffun id params expr body) list
                      `(let ((,id (lambda ,params ,expr)))
                         ,body))))
     (defvar   . ,(lambda (list)
-                   (destructuring-bind (defvar id eq expr in body) list
+                   (destructuring-bind (defvar id eq expr body) list
                      `(lexical-let ((,id ,expr)) ,body))))
+    (in       . ,(apply-partially 'nth 1))
     (string   . ,#'read)
     (params   . ,(apply-partially 'nth 1))
     (args     . ,(apply-partially 'nth 1))

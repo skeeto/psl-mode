@@ -82,6 +82,8 @@ argument."
 (defun psl-count-indent (stack)
   "Compute the indentation level from the token stack."
   (cond ((null stack) 0)
+        ((eq (car stack) 'in)
+         (- (psl-count-indent (cdr stack)) 1))
         ((eq (car stack) 'block)
          (+ (if (member (cadr stack) psl-indent-tokens) 0 1)
             (psl-count-indent (cdr stack))))
@@ -109,7 +111,7 @@ other modes do."
     (let ((indent (psl-count-indent (delete 'expr (reverse mpd-point-stack)))))
       (save-excursion
         (back-to-indentation)
-        (if (looking-at "}") (setq indent (1- indent))))
+        (if (looking-at "\\(?:}\\|in\\)") (setq indent (1- indent))))
       (psl-indent-line-to (max 0 (* psl-indent-width indent))))))
 
 (psl-count-indent '(defvar expr if expr))
