@@ -8,7 +8,10 @@
 
 ;;; Commentary:
 
-;; The automatic indentation size can be set with `psl-indent-width'.
+;; The automatic indentation size can be set with
+;; `psl-indent-width'. The parsing required for indentation benefits
+;; massively from byte-compiling, so do that if this package seems
+;; slow.
 
 ;; After setting up `psl-program-name' the current buffer can be run
 ;; by the interpreter with C-c C-r (`psl-run-buffer'). Alternatively,
