@@ -72,7 +72,9 @@ handles errors properly."
   (condition-case err
       (psl-print (eval sexp))
     (wrong-number-of-arguments
-     (error "Application failed with arity mismatch"))))
+     (error "Application failed with arity mismatch"))
+    (void-variable
+     (error (format "Unbound identifier: %s" (cadr err))))))
 
 (defun psl-eval-buffer ()
   "Evaluate the ParselTongue program in the buffer."
