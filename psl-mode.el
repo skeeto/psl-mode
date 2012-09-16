@@ -112,8 +112,7 @@ other modes do."
     (save-excursion
       (back-to-indentation)
       (if (looking-at "}") (setq indent (1- indent))))
-    (psl-indent-line-to (max 0 (* psl-indent-width indent))))
-  (princ mpd-point-stack t))
+    (psl-indent-line-to (max 0 (* psl-indent-width indent)))))
 
 (psl-count-indent '(defvar expr if expr))
 
