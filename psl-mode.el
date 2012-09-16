@@ -105,11 +105,12 @@ other modes do."
   (condition-case err
       (psl-compile-to-elisp)
     (error nil))
-  (let ((indent (psl-count-indent (delete 'expr (reverse mpd-point-stack)))))
-    (save-excursion
-      (back-to-indentation)
-      (if (looking-at "}") (setq indent (1- indent))))
-    (psl-indent-line-to (max 0 (* psl-indent-width indent)))))
+  (unless (< mpd-best (point))
+    (let ((indent (psl-count-indent (delete 'expr (reverse mpd-point-stack)))))
+      (save-excursion
+        (back-to-indentation)
+        (if (looking-at "}") (setq indent (1- indent))))
+      (psl-indent-line-to (max 0 (* psl-indent-width indent))))))
 
 (psl-count-indent '(defvar expr if expr))
 
