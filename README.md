@@ -2,7 +2,7 @@
 
 It looks like this,
 
-![](http://i.imgur.com/BXXE8.png)
+![](http://i.imgur.com/cwLb9.png)
 
 Automatic indentation is supported by a full language parser. If
 `psl-program-name` is set up then the current buffer can be executed

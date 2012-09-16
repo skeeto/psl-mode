@@ -4,9 +4,9 @@ deffun evenp(x)
     else if ==(x, 1) then
             false
         else evenp(-(x, 2))
-    in defvar x = 14 in {
-        while (evenp(x)) { x--; };   # Make sure x odd
-        print("This is an odd number: ");
-        print(x);
-        ""; # No output
-    }
+in defvar x = 14 in {
+    while (evenp(x)) { x--; };   # Make sure x odd
+    print("This is an odd number: ");
+    print(x);
+    ""; # No output
+}
