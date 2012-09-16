@@ -23,10 +23,8 @@
 
 ;;; Known bugs:
 
-;; * Semicolon chaining not supported (outside of { } that is)
 ;; * Loops return the wrong value
 ;; * Probably some evaluation order mistakes
-;; * Environment not quite right: defvar functions can recurse
 
 ;;; Planned features:
 
@@ -35,6 +33,14 @@
 ;;; Won't fix:
 
 ;; * Function equality is fundamentally broken
+;;   - It's broken in the reference implementation and was
+;;     acknowledged as a bad design choice.
+;; * Semicolon chaining not supported outside of blocks ({ ... }).
+;;   - The spec is completely ambiguous about it and the reference
+;;     implementation follows complex, unpredictable precedence
+;;     rules. For example, if expressions (usually) chain on the if
+;;     expression as a whole rather than the trailing else
+;;     expression. Why does it do this?
 
 ;;; Code:
 
