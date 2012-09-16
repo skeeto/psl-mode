@@ -84,7 +84,9 @@ handles errors properly."
 (defun psl-show-elisp-compilation ()
   "Show the Emacs Lisp compilation in a buffer."
   (interactive)
-  (pp-display-expression (psl-compile-to-elisp) "*Pp Eval Output*"))
+  (let ((print-circle t)
+        (print-gensym t))
+    (pp-display-expression (psl-compile-to-elisp) "*Pp Eval Output*")))
 
 (defun psl-batch-eval ()
   "Run a ParselTongue program from the command line. It would be
