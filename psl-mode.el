@@ -24,7 +24,8 @@
 
 (defgroup psl-mode nil
   "Options for editing ParselTongue code."
-  :tag "ParselTongue")
+  :tag "ParselTongue"
+  :group 'languages)
 
 (defcustom psl-program-name "psl"
   "Path to the ParselTongue interpreter.
