@@ -179,6 +179,7 @@ used like this:
   '((expr    . [block defvar deffun number object lambda string true false
                 if while for assign assignm inc-pre inc-post dec-pre dec-post
                 + - == < > print funcall index message pexpr id])
+    (empty   . "")
     (pexpr     "(" expr ")")
     (defvar    "defvar" id "=" expr "in" expr)
     (deffun    "deffun" id params expr "in" expr)
@@ -188,7 +189,7 @@ used like this:
     (number  . "[0-9]+")
     (string  . "\"\\(?:[^\"\\\\]\\|\\\\.\\)*\"")
     (block     "{" exprs ";?" "}")
-    (exprs     expr [(";" exprs) ""])
+    (exprs     expr [(";" exprs) empty])
 
     ;; Control structures
     (if        "if" expr then else)
@@ -199,13 +200,13 @@ used like this:
 
     ;; Identifiers
     (id      . "[a-zA-Z]+")
-    (ids       id [("," ids) ""])
-    (params    "(" [ids ""] ")")
+    (ids       id [("," ids) empty])
+    (params    "(" [ids empty] ")")
 
     ;; Function application
     (funcall   [block index pexpr id] args)
-    (args      "(" [aexprs ""] ")")
-    (aexprs    expr [("," aexprs) ""])
+    (args      "(" [aexprs empty] ")")
+    (aexprs    expr [("," aexprs) empty])
 
     ;; Builtins
     (+         "+" args)
@@ -224,9 +225,9 @@ used like this:
     (assignm   [index= id] "[+-]=" expr)
 
     ;; Objects
-    (pairs     pair [("," pairs) ""])
+    (pairs     pair [("," pairs) empty])
     (pair      id ":" expr)
-    (object    "{" [pairs ""] "}")
+    (object    "{" [pairs empty] "}")
     (index     [pexpr id] [by-id index-str])
     (index=    [pexpr id] [by-id index-str])
     (message   [pexpr id] "@" [index-str field] args)
@@ -237,13 +238,13 @@ used like this:
 
 (defvar psl-token-funcs
   `((expr     . ,#'identity)
+    (empty    . ,(lambda (empty) ()))
     (pexpr    . ,(apply-partially 'nth 1))
     (number   . ,#'string-to-number)
     (id       . ,#'intern)
     (deffun   . ,(lambda (list)
                    (destructuring-bind (deffun id params expr in body) list
-                     `(let ((,id (lambda ,(if (stringp params) () params)
-                                   ,expr)))
+                     `(let ((,id (lambda ,params ,expr)))
                         ,body))))
     (defvar   . ,(lambda (list)
                    (destructuring-bind (defvar id eq expr in body) list
@@ -253,21 +254,17 @@ used like this:
     (args     . ,(apply-partially 'nth 1))
     (ids      . ,#'psl--tuck)
     (exprs    . ,#'psl--tuck)
-    (funcall  . ,(lambda (call) (apply #'psl--funcall call)))
+    (funcall  . ,(lambda (call)
+                   `(funcall ,(nth 0 call) ,@(nth 1 call))))
     (aexprs   . ,#'psl--tuck)
     (block    . ,(lambda (exprs) (cons 'progn (nth 1 exprs))))
     (true     . ,(lambda (true) t))
-    (false    . ,(lambda (false) '(not t))) ; can't return nil
+    (false    . ,(lambda (false) nil))
     (pair     . ,(lambda (pair) (cons (nth 0 pair) (nth 2 pair))))
-    (pairs    . ,(lambda (pairs)
-                   (if (stringp (nth 1 pairs))
-                       (list (car pairs))
-                     (cons (car pairs) (cadadr pairs)))))
+    (pairs    . ,(lambda (pairs) (cons (car pairs) (cadadr pairs))))
     (object   . ,(lambda (obj)
                    (let ((fields (nth 1 obj)))
-                     (if (stringp fields)
-                         '(list (quote object))
-                       `(list 'object ,@(psl-make-object fields))))))
+                     `(list 'object ,@(psl--make-object fields)))))
     (if       . ,(lambda (expr)
                    (destructuring-bind (if cond then else) expr
                      `(if ,cond ,then ,else))))
@@ -281,7 +278,7 @@ used like this:
                      `(progn ,init (while ,cond ,body ,inc)))))
     (lambda   . ,(lambda (lm)
                    (destructuring-bind (fn params body) lm
-                     `(lambda ,(if (stringp params) () params) ,body))))
+                     `(lambda ,params ,body))))
     (inc-pre  . ,(lambda (expr)
                    (let ((id (cadr expr)))
                      `(setq ,id (1+ ,id)))))
@@ -311,12 +308,12 @@ used like this:
                                (,op (cdr (or (assq ,field (cdr ,obj))
                                          (error "Field not found: %s" ,field)))
                                     ,expr) ,obj))))))))
-    (+         . ,(lambda (op) (psl--apply 'psl-+ (nth 1 op))))
-    (-         . ,(lambda (op) (psl--apply 'psl-- (nth 1 op))))
-    (<         . ,(lambda (op) (psl--apply 'psl-< (nth 1 op))))
-    (>         . ,(lambda (op) (psl--apply 'psl-> (nth 1 op))))
-    (==        . ,(lambda (op) (psl--apply 'psl-== (nth 1 op))))
-    (print     . ,(lambda (op) (psl--apply 'psl-print (nth 1 op))))
+    (+         . ,(lambda (op) (cons 'psl-+ (nth 1 op))))
+    (-         . ,(lambda (op) (cons 'psl-- (nth 1 op))))
+    (<         . ,(lambda (op) (cons 'psl-< (nth 1 op))))
+    (>         . ,(lambda (op) (cons 'psl-> (nth 1 op))))
+    (==        . ,(lambda (op) (cons 'psl-== (nth 1 op))))
+    (print     . ,(lambda (op) (cons 'psl-print (nth 1 op))))
     (index     . ,(lambda (index)
                     `(cdr (or (assq ,(nth 1 index) (cdr,(nth 0 index)))
                               (error "Field not found: %s" ,(nth 1 index))))))
@@ -324,32 +321,24 @@ used like this:
     (message   . ,(lambda (msg)
                     (destructuring-bind (obj at f args) msg
                       `(funcall (cdr (assq ,f (cdr ,obj)))
-                                ,@(psl--apply obj args)))))
+                                ,@(cons obj args)))))
     (field     . ,(lambda (field) `(quote ,field)))
     (index-str . ,(lambda (index) `(intern ,(nth 1 index))))
     (by-id     . ,#'cadr))
   "Syntax tree manipulation functions.")
 
-(defun psl--apply (f args)
-  (if (stringp args)
-      (list f)
-    (cons f args)))
-
-(defun psl--funcall (f args)
-  `(funcall ,f ,@(if (stringp args) () args)))
-
 (defun psl--tuck (names)
-  (if (stringp (nth 1 names))
-      (list (car names))
-    (cons (car names) (cadadr names))))
+  "Turn nested chains of things into a flat list."
+  (cons (car names) (cadadr names)))
 
-(defun psl-make-object (fields)
+(defun psl--make-object (fields)
+  "Create part a new object from a parsed s-exp."
   (if (null fields)
       ()
     (if (assq (caar fields) (cdr fields))
         '((error "Multiply-defined fields"))
       (cons `(cons (quote ,(caar fields)) ,(cdar fields))
-            (psl-make-object (cdr fields))))))
+            (psl--make-object (cdr fields))))))
 
 ;;; Parser functions
 
