@@ -4,7 +4,7 @@
 
 ;; Author: Christopher Wellons <mosquitopsu@gmail.com>
 ;; URL: https://github.com/skeeto/psl-mode
-;; Version: 0.1
+;; Version: 1.0
 
 ;;; Commentary:
 
