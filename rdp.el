@@ -12,6 +12,65 @@
 ;; languages in buffers. Some support is provided for implementing
 ;; automatic indentation based on the parser.
 
+;; A grammar is provided to the parser as an alist of patterns.
+;; Patterns are named by symbols, which can reference other
+;; patterns. The lisp object type indicates the type of the pattern:
+
+;; * string -- an Emacs regular expression
+;; * list   -- "and" relationship, each pattern must match in order
+;; * vector -- "or" relationship, one of the patterns must match
+;; * symbol -- recursive reference to another pattern in the alist
+
+;; For example, this grammar parses simple arithmetic with operator
+;; precedence and grouping.
+
+;;     (defvar arith-tokens
+;;       '((sum       prod  [([+ -] sum)  no-sum])
+;;         (prod      value [([* /] prod) no-prod])
+;;         (num     . "-?[0-9]+\\(\\.[0-9]*\\)?")
+;;         (+       . "\\+")
+;;         (-       . "-")
+;;         (*       . "\\*")
+;;         (/       . "/")
+;;         (pexpr     "(" [sum prod num pexpr] ")")
+;;         (value   . [pexpr num])
+;;         (no-prod . "")
+;;         (no-sum  . "")))
+
+;; Given just this grammar, the parser will return an s-expression of
+;; the input where each token match is `cons'ed with the token
+;; name. To make this more useful, the s-expression can be manipulated
+;; as it is read using an alist of token names and functions. This
+;; could be used to simplify the s-expression, build an interpreter
+;; that interprets during parsing, or even build a compiler.
+
+;; For example, this function alist evaluates the arithmetic as it is
+;; parsed:
+
+;;     (defun arith-op (expr)
+;;       (destructuring-bind (a (op b)) expr
+;;         (funcall op a b)))
+;;
+;;     (defvar arith-funcs
+;;       `((sum     . ,#'arith-op)
+;;         (prod    . ,#'arith-op)
+;;         (num     . ,#'string-to-number)
+;;         (+       . ,#'intern)
+;;         (-       . ,#'intern)
+;;         (*       . ,#'intern)
+;;         (/       . ,#'intern)
+;;         (pexpr   . ,#'cadr)
+;;         (value   . ,#'identity)
+;;         (no-prod . ,(lambda (e) '(* 1)))
+;;         (no-sum  . ,(lambda (e) '(+ 0)))))
+
+;; Putting this all together:
+
+;; (defun compute (string)
+;;   (rdp-parse-string string arith-tokens arith-funcs))
+;;
+;; (arith "(1 + 2 + 3 + 4 + 5) * -3/4.0")
+
 ;;; Code:
 
 (defvar rdp-best 0
