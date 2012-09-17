@@ -18,6 +18,7 @@
     (should (= (current-indentation) 0)))
   (with-temp-buffer
     (psl-mode)
-    (insert "deffvar v = true in {\n    # defvar\n10")
+    (insert "#deffun f()\n    10")
+    (beginning-of-line)
     (psl-indent-line)
-    (should (= (current-indentation) psl-indent-width))))
+    (should (= (current-indentation) 0))))
