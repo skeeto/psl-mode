@@ -45,6 +45,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl))
+(require 'rdp)
 
 (defvar psl-stack-multiplier 4
   "Increase `max-lisp-eval-depth' by this factor when parsing.")
@@ -52,8 +53,8 @@
 (defun psl-compile-to-elisp ()
   "Compile the current buffer into an Emacs Lisp s-expression."
   (let ((buffer (current-buffer)))
-    (setq mpd-start (save-excursion (beginning-of-line) (point)))
-    (setq mpd-point-stack ())
+    (setq rdp-start (save-excursion (beginning-of-line) (point)))
+    (setq rdp-point-stack ())
     (with-temp-buffer
       (insert-buffer-substring buffer) ; lose the text properties
       (psl-remove-comments)
@@ -61,14 +62,14 @@
       (let ((sexp
              (let ((max-lisp-eval-depth
                     (floor (* psl-stack-multiplier max-lisp-eval-depth))))
-               (mpd-parse psl-tokens psl-token-funcs 'expr))))
-        (mpd-skip-whitespace)
+               (rdp-parse psl-tokens psl-token-funcs 'expr))))
+        (rdp-skip-whitespace)
         (if (= (point) (point-max))
             sexp
           (error (format "%s:%d:%d: Encountered error while parsing"
                          (buffer-name buffer)
-                         (line-number-at-pos mpd-best)
-                         (save-excursion (goto-char mpd-best)
+                         (line-number-at-pos rdp-best)
+                         (save-excursion (goto-char rdp-best)
                                          (current-column)))))))))
 
 (defun psl-show-elisp-compilation ()
@@ -257,108 +258,6 @@
         '((error "Multiply-defined fields"))
       (cons `(cons (quote ,(caar fields)) ,(cdar fields))
             (psl--make-object (cdr fields))))))
-
-;;; Parser functions
-
-(defvar mpd-best 0
-  "The furthest most point that parsing reached. This information
-can be used to determine where parsing failed.")
-
-(defvar mpd-start 0
-  "Position of point in original source buffer. The purpose is
-for auto-indentation.")
-
-(defvar mpd-point-stack ()
-  "The token stack that contains the point. This is used for
-auto-indentation.")
-
-(defvar mpd-token-stack ()
-  "Stack of tokens at this point.")
-
-(defun mpd-box (value)
-  "Box a parse return value, allowing nil to be a valid return."
-  (vector value))
-
-(defun mpd-unbox (box)
-  "Unbox a parse return value."
-  (aref box 0))
-
-(defun mpd-get-token-func (token funcs)
-  "Get the manipulation function for the given token."
-  (cdr (assq token funcs)))
-
-(defun mpd-parse (tokens &optional funcs pattern)
-  "Return the next item in the current buffer."
-  (setq mpd-best 0)
-  (setq mpd-token-stack ())
-  (if pattern
-      (mpd-unbox (mpd-match pattern tokens funcs))
-    (dolist (token tokens)
-      (let ((result (mpd-match (car token) tokens funcs)))
-        (if result (return (mpd-unbox result)))))))
-
-(defun mpd-parse-string (string tokens &optional funcs pattern)
-  "Like `mpd-parse' but operates on a string."
-  (with-temp-buffer
-    (insert string)
-    (goto-char (point-min))
-    (mpd-parse tokens funcs pattern)))
-
-(defun mpd-match-list (list tokens funcs)
-  "Match all patterns in a list."
-  (let ((result (mpd-match (car list) tokens funcs)))
-    (when result
-      (if (null (cdr list))
-          (mpd-box (list (mpd-unbox result)))
-        (let ((rest (mpd-match-list (cdr list) tokens funcs)))
-          (when rest
-            (mpd-box (cons (mpd-unbox result) (mpd-unbox rest)))))))))
-
-(defun mpd-match-regex (regex tokens funcs)
-  "Match a regex."
-  (when (looking-at regex)
-    (prog1 (mpd-box (buffer-substring-no-properties (point) (match-end 0)))
-      (goto-char (match-end 0)))))
-
-(defun mpd-match-token (token tokens funcs)
-  "Match a token by name (symbol)."
-  (push token mpd-token-stack)
-  (let* ((pattern (cdr (assq token tokens)))
-         (match (mpd-match pattern tokens funcs)))
-    (pop mpd-token-stack)
-    (when match
-      (let ((macro (mpd-get-token-func token funcs)))
-        (mpd-box (if macro
-                     (funcall macro (mpd-unbox match))
-                   (cons token (mpd-unbox match))))))))
-
-(defun mpd-match-or (vec tokens funcs)
-  "Match at least one pattern in the vector."
-  (dolist (option (mapcar 'identity vec))
-    (let ((match (mpd-match option tokens funcs)))
-      (when match (return match)))))
-
-(defun mpd-skip-whitespace ()
-  "Skip over all whitespace."
-  (search-forward-regexp "[[:space:]]*"))
-
-(defun mpd-match (pattern tokens &optional funcs)
-  "Match the given pattern object of any type (toplevel)."
-  (mpd-skip-whitespace)
-  (let ((start (point))
-        (result (etypecase pattern
-                  (string (mpd-match-regex pattern tokens funcs))
-                  (list   (mpd-match-list  pattern tokens funcs))
-                  (symbol (mpd-match-token pattern tokens funcs))
-                  (vector (mpd-match-or    pattern tokens funcs)))))
-    (when (and (<= (length mpd-point-stack) (length mpd-token-stack))
-               (> mpd-start start)
-               (> (point) mpd-start))
-      (setq mpd-point-stack (reverse mpd-token-stack)))
-    (unless result
-      (setq mpd-best (max mpd-best (point)))
-      (goto-char start))
-    result))
 
 (provide 'psl-compile)
 
