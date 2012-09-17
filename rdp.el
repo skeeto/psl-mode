@@ -77,7 +77,7 @@
 
 ;; Putting this all together:
 
-;; (defun compute (string)
+;; (defun arith (string)
 ;;   (rdp-parse-string string arith-tokens arith-funcs))
 ;;
 ;; (arith "(1 + 2 + 3 + 4 + 5) * -3/4.0")
