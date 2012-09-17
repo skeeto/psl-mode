@@ -10,6 +10,8 @@
 
 ;; Evaluation functions
 
+(eval-when-compile (require 'psl-compile))
+
 (defun psl-eval-buffer ()
   "Evaluate the ParselTongue program in the buffer."
   (interactive)

@@ -44,7 +44,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl) (require 'pp))
 (require 'rdp)
 
 (defvar psl-stack-multiplier 4
