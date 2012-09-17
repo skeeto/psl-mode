@@ -82,7 +82,9 @@
 ;;
 ;; (arith "(1 + 2 + 3 + 4 + 5) * -3/4.0")
 
-;; Note: recursive descent parsers *cannot* be left-recursive. It is
+;; Tips:
+
+;; Recursive descent parsers *cannot* be left-recursive. It is
 ;; important that a pattern does not recurse without first consuming
 ;; some input. Any grammar can be made non-left-recursive but not
 ;; necessarily simplistically.
@@ -91,6 +93,15 @@
 ;; `max-lisp-eval-depth' by some factor before calling
 ;; `rdp-parse'. After increasing it, running out of stack space is
 ;; likely an indication of left-recursion somewhere in the grammar.
+
+;; Token functions should not have side effects. Due to the
+;; backtracking of the parser, just because the function was called
+;; doesn't mean there was actually a successful match. Also, these
+;; functions are free to return nil or the empty list as such a return
+;; is *not* an indication of failure.
+
+;; In general don't try to parse comments in the grammar. Strip them
+;; from the buffer before calling the parser.
 
 ;; Indentation facilities:
 
