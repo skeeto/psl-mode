@@ -12,6 +12,11 @@
 ;; languages in buffers. Some support is provided for implementing
 ;; automatic indentation based on the parser.
 
+;; In general, the only two functions you need to worry about are:
+
+;; * `rpd-parse'        -- parse the current buffer
+;; * `rpd-parse-string' -- parse a string (in a temp buffer)
+
 ;; A grammar is provided to the parser as an alist of patterns.
 ;; Patterns are named by symbols, which can reference other
 ;; patterns. The lisp object type indicates the type of the pattern:
@@ -20,6 +25,11 @@
 ;; * list   -- "and" relationship, each pattern must match in order
 ;; * vector -- "or" relationship, one of the patterns must match
 ;; * symbol -- recursive reference to another pattern in the alist
+
+;; The global variable `rdp-best' indicates the furthest point reached
+;; in the buffer by the parser. Is parsing failed (i.e. `rdp-best' is
+;; not at the end of the buffer), this is likely to be the position of
+;; the syntax error.
 
 ;; For example, this grammar parses simple arithmetic with operator
 ;; precedence and grouping.
@@ -37,12 +47,13 @@
 ;;         (no-prod . "")
 ;;         (no-sum  . "")))
 
-;; Given just this grammar, the parser will return an s-expression of
-;; the input where each token match is `cons'ed with the token
-;; name. To make this more useful, the s-expression can be manipulated
-;; as it is read using an alist of token names and functions. This
-;; could be used to simplify the s-expression, build an interpreter
-;; that interprets during parsing, or even build a compiler.
+;; Given just this grammar to `rdp-parse' it will return an
+;; s-expression of the input where each token match is `cons'ed with
+;; the token name. To make this more useful, the s-expression can be
+;; manipulated as it is read using an alist of token names and
+;; functions. This could be used to simplify the s-expression, build
+;; an interpreter that interprets during parsing, or even build a
+;; compiler.
 
 ;; For example, this function alist evaluates the arithmetic as it is
 ;; parsed:
@@ -70,6 +81,34 @@
 ;;   (rdp-parse-string string arith-tokens arith-funcs))
 ;;
 ;; (arith "(1 + 2 + 3 + 4 + 5) * -3/4.0")
+
+;; Note: recursive descent parsers *cannot* be left-recursive. It is
+;; important that a pattern does not recurse without first consuming
+;; some input. Any grammar can be made non-left-recursive but not
+;; necessarily simplistically.
+
+;; The parser requires a lot of stack! Consider increasing
+;; `max-lisp-eval-depth' by some factor before calling
+;; `rdp-parse'. After increasing it, running out of stack space is
+;; likely an indication of left-recursion somewhere in the grammar.
+
+;; Indentation facilities:
+
+;; To find out where in the parse tree a point lies, set `rdp-start'
+;; to the desired point before starting parsing. After parsing, either
+;; successfully or not,`rdp-point-stack' will contain a stack of
+;; tokens indicating roughly where in the parse tree the point
+;; lies.
+
+;; To use this for rudimentary indentation, set `rpd-start' to the
+;; `beginning-of-line' of the current point and count how many
+;; indent-worthy tokens are in the stack once parsing is complete.
+
+;; See also:
+
+;; * http://emacswiki.org/emacs/peg.el
+;; * http://en.wikipedia.org/wiki/Recursive_descent_parser
+;; * http://en.wikipedia.org/wiki/Parsing_expression_grammar
 
 ;;; Code:
 
