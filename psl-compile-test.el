@@ -3,6 +3,7 @@
 
 (require 'ert)
 (require 'cl)
+(require 'psl-lib)
 (require 'psl-compile)
 
 (defun psl-obj (&rest pairs)

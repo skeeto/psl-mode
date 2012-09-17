@@ -1,4 +1,4 @@
 #!/bin/sh
 
 DIR="$( cd "$( dirname "$0" )" && pwd )"
-exec emacs -Q --batch -l "$DIR/psl-compile.el" -f psl-batch-eval "$1"
+exec emacs -Q --batch -L $DIR -l psl-lib.el -f psl-batch-eval "$1"
