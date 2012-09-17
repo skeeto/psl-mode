@@ -1,5 +1,5 @@
 ;; Usage:
-;;   emacs -batch -L . -l psl-compile-test.el -f ert-run-tests-batch
+;;   emacs -batch -L .. -l psl-compile-test.el -f ert-run-tests-batch
 
 (require 'ert)
 (require 'cl)
