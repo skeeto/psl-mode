@@ -8,6 +8,24 @@ Automatic indentation is supported by a full language parser. If
 `psl-program-name` is set up then the current buffer can be executed
 by the interpreter with `psl-run-buffer` (`C-c C-r`).
 
+## Installation
+
+Add this Git repository to your load path.
+
+```el
+(add-to-list 'load-path "/path/to/repo")
+(require 'psl-mode)
+```
+
+Automatic indentation benefits greatly from byte-compilation so it's a
+good idea to byte-compile the package using the provided
+Makefile. This will also generate an autoloads file, which would be
+`require`d instead of `psl-mode`.
+
+```el
+(require 'psl-mode-autoloads)
+```
+
 ## ParselTongue Compiler
 
 Also included with psl-mode is a ParselTongue compiler which compiles
