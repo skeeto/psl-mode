@@ -66,7 +66,8 @@ handles errors properly."
                                                (cdr a)))))))
     (cond
      ((and (psl-object-p a) (psl-object-p b))
-      (equal (clean (sort (cdr a) #'pair<)) (clean (sort (cdr b) #'pair<))))
+      (equal (clean (sort (copy-sequence (cdr a)) #'pair<))
+             (clean (sort (copy-sequence (cdr b)) #'pair<))))
      (t (equal a b)))))
 
 (defun psl-< (&rest args)
